@@ -3,6 +3,9 @@
 #include <vector>
 #include <initializer_list>
 #include <iostream>
+#include <functional>
+
+#pragma once
 
 template <typename T>
 struct qr_pair {
@@ -75,6 +78,9 @@ class poly {
 		
 		template <typename U>
 		operator poly<U>();
+		
+		template <typename U>
+		const poly<U> convert(std::function<U(T)> converter) const;
 };
 
 template <typename T>
@@ -363,5 +369,14 @@ poly<T>::operator poly<U>() {
 	std::vector<U> vec;
 	for (int i = 0; i < this->coeffs.size(); i++)
 		vec.push_back(static_cast<U>(this->coeffs[i]));
+	return poly<U>(vec);
+}
+
+template <typename T>
+template <typename U>
+const poly<U> poly<T>::convert(std::function<U(T)> converter) const {
+	std::vector<U> vec;
+	for (int i = 0; i < this->coeffs.size(); i++)
+		vec.push_back(converter(this->coeffs[i]));
 	return poly<U>(vec);
 }

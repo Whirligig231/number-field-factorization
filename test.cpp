@@ -7,7 +7,7 @@
 #include "alg.h"
 
 int main(int argc, char *argv[]) {
-	poly<mod> mod5({mod(5, 3), mod(5, 4)});
+	poly<mod> mod5({mod(5, 3), mod(5, 4), mod(5, 19)});
 	std::cout << mod5 << std::endl;
 	mod5 += mod(5, 4);
 	std::cout << mod5 << std::endl;
@@ -15,5 +15,7 @@ int main(int argc, char *argv[]) {
 	std::cout << lift << std::endl;
 	lift += mpz_class(4);
 	std::cout << lift << std::endl;
+	poly<mod> project = lift.convert(to_mod(3));
+	std::cout << project << std::endl;
 	return 0;
 }
