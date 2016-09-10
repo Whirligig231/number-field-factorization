@@ -4,6 +4,7 @@
 
 #include "polyring.h"
 #include "modring.h"
+#include "alg.h"
 
 int main(int argc, char *argv[]) {
 	poly<mod> mod5({mod(5, 3), mod(5, 4)});
