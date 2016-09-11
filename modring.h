@@ -5,6 +5,8 @@
 #include <initializer_list>
 #include <iostream>
 
+#include "numbers.h"
+
 #pragma once
 
 class mod {
@@ -44,3 +46,13 @@ class mod {
 };
 
 std::function<mod(mpz_class)> to_mod(mpz_class base);
+
+template <>
+inline mod zero<mod>(const mod &reference) {
+	return mod(0, reference.get_base());
+}
+
+template <>
+inline mod one<mod>(const mod &reference) {
+	return mod(1, reference.get_base());
+}

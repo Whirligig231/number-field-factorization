@@ -5,6 +5,8 @@
 #include <iostream>
 #include <functional>
 
+#include "numbers.h"
+
 #pragma once
 
 template <typename T>
@@ -114,7 +116,7 @@ poly<T>::poly(const poly<T> &other) {
 
 template <typename T>
 void poly<T>::simplify() {
-	while (this->coeffs.size() > 0 && this->coeffs[this->coeffs.size() - 1] == static_cast<T>(0))
+	while (this->coeffs.size() > 0 && this->coeffs[this->coeffs.size() - 1] == zero<T>(this->coeffs[this->coeffs.size() - 1]))
 		this->coeffs.pop_back();
 }
 
@@ -278,7 +280,7 @@ poly<T> poly<T>::operator*(const poly<T> &p) const {
 		return p;
 	poly<T> ret = poly<T>();
 	for (int i = 0; i <= p.degree() + this->degree(); i++)
-		ret.coeffs.push_back(this->coeffs[0]*static_cast<T>(0));
+		ret.coeffs.push_back(zero<T>(this->coeffs[this->coeffs.size() - 1]));
 	for (int i = 0; i <= p.degree(); i++) {
 		for (int j = 0; j <= this->degree(); j++) {
 			ret.coeffs[i+j] += this->coeffs[j]*p.coeffs[i];
@@ -297,7 +299,7 @@ poly<T> &poly<T>::operator<<=(unsigned int len) {
 	if (this->coeffs.size() == 0)
 		return *this;
 	for (int i = 0; i < len; i++)
-		this->coeffs.insert(this->coeffs.begin(), this->coeffs[0]*static_cast<T>(0));
+		this->coeffs.insert(this->coeffs.begin(), zero<T>(this->coeffs[0]));
 	return *this;
 }
 
@@ -315,7 +317,7 @@ qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 	// Algorithm 3.1.1
 
 	poly<T> r = *this, q;
-	T invlb = static_cast<T>(1)/(other[other.degree()]);
+	T invlb = one<T>(other[other.degree()])/(other[other.degree()]);
 	while (r.degree() >= other.degree()) {
 		poly<T> s = poly<T>(r[r.degree()]*invlb);
 		s <<= r.degree()-other.degree();
@@ -393,4 +395,14 @@ poly<U> poly<T>::convert(std::function<U(T)> converter) const {
 	for (int i = 0; i < this->coeffs.size(); i++)
 		vec.push_back(converter(this->coeffs[i]));
 	return poly<U>(vec);
+}
+
+template <typename T>
+poly<T> zero(const poly<T> &reference) {
+	return poly<T>();
+}
+
+template <typename T>
+poly<T> one(const poly<T> &reference) {
+	return poly<T>(one<T>(reference.coeffs[reference.degree()]));
 }
