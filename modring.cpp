@@ -1,7 +1,8 @@
 #include "modring.h"
 
-mod::mod(mpz_class base) {
-	this->base = base;
+mod::mod(mpz_class value) {
+	this->base = 0;
+	this->value = value;
 }
 
 mod::mod(mpz_class base, mpz_class value) {
@@ -17,6 +18,10 @@ mod::mod(const mod &other) {
 mod::mod(const mod &other, mpz_class value) {
 	this->base = other.base;
 	mpz_mod(this->value.get_mpz_t(), value.get_mpz_t(), other.base.get_mpz_t());
+}
+
+mpz_class mod::get_base() const {
+	return this->base;
 }
 
 mod &mod::operator=(mpz_class value) {
@@ -40,19 +45,22 @@ bool mod::operator!=(const mod &other) const {
 
 mod &mod::operator+=(const mod &other) {
 	this->value += other.value;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
+	mpz_class base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
 	return *this;
 }
 
 mod &mod::operator-=(const mod &other) {
 	this->value -= other.value;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
+	mpz_class base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
 	return *this;
 }
 
 mod &mod::operator*=(const mod &other) {
 	this->value *= other.value;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
+	mpz_class base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
 	return *this;
 }
 
@@ -60,27 +68,27 @@ mod &mod::operator/=(const mod &other) {
 	return (*this) *= other.inv();
 }
 
-const mod mod::operator+(const mod &other) const {
+mod mod::operator+(const mod &other) const {
 	return mod(*this) += other;
 }
 
-const mod mod::operator-(const mod &other) const {
+mod mod::operator-(const mod &other) const {
 	return mod(*this) -= other;
 }
 
-const mod mod::operator*(const mod &other) const {
+mod mod::operator*(const mod &other) const {
 	return mod(*this) *= other;
 }
 
-const mod mod::operator/(const mod &other) const {
+mod mod::operator/(const mod &other) const {
 	return mod(*this) /= other;
 }
 
-const mod mod::operator-() const {
+mod mod::operator-() const {
 	return mod(this->base, this->base - this->value);
 }
 
-const mod mod::inv() const {
+mod mod::inv() const {
 	mpz_class g, s;
 	mpz_gcdext(g.get_mpz_t(), s.get_mpz_t(), NULL, this->value.get_mpz_t(), this->base.get_mpz_t());
 	if (g != 1) {

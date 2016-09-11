@@ -10,13 +10,14 @@
 class mod {
 	private:
 		mpz_class base, value;
+		
 	public:
-		explicit mod(mpz_class base);
+		explicit mod(mpz_class value);
 		mod(mpz_class base, mpz_class value);
 		mod(const mod &other);
 		mod(const mod &other, mpz_class value);
 		
-		mpz_class getBase() const;
+		mpz_class get_base() const;
 		
 		mod &operator=(mpz_class value);
 		mod &operator=(const mod &other);
@@ -29,13 +30,13 @@ class mod {
 		mod &operator*=(const mod &other);
 		mod &operator/=(const mod &other);
 		
-		const mod operator+(const mod &other) const;
-		const mod operator-(const mod &other) const;
-		const mod operator*(const mod &other) const;
-		const mod operator/(const mod &other) const;
+		mod operator+(const mod &other) const;
+		mod operator-(const mod &other) const;
+		mod operator*(const mod &other) const;
+		mod operator/(const mod &other) const;
 		
-		const mod operator-() const;
-		const mod inv() const;
+		mod operator-() const;
+		mod inv() const;
 		
 		friend std::ostream &operator<<(std::ostream &os, const mod &p);
 		

@@ -50,27 +50,27 @@ class poly {
 		poly<T> &operator*=(T constant);
 		poly<T> &operator/=(T constant);
 		
-		const poly<T> operator+(T constant) const;
-		const poly<T> operator-(T constant) const;
-		const poly<T> operator*(T constant) const;
-		const poly<T> operator/(T constant) const;
+		poly<T> operator+(T constant) const;
+		poly<T> operator-(T constant) const;
+		poly<T> operator*(T constant) const;
+		poly<T> operator/(T constant) const;
 		
-		const poly<T> operator-() const;
+		poly<T> operator-() const;
 		
 		poly<T> &operator+=(const poly<T> &other);
 		poly<T> &operator-=(const poly<T> &other);
 		poly<T> &operator*=(const poly<T> &other);
 		
-		const poly<T> operator+(const poly<T> &other) const;
-		const poly<T> operator-(const poly<T> &other) const;
-		const poly<T> operator*(const poly<T> &other) const;
+		poly<T> operator+(const poly<T> &other) const;
+		poly<T> operator-(const poly<T> &other) const;
+		poly<T> operator*(const poly<T> &other) const;
 		
 		poly<T> &operator<<=(unsigned int len);
 		poly<T> &operator>>=(unsigned int len);
 		
-		const qr_pair<poly<T>> divide(const poly<T> &other) const;
-		const poly<T> operator/(const poly<T> &other) const;
-		const poly<T> operator%(const poly<T> &other) const;
+		qr_pair<poly<T>> divide(const poly<T> &other) const;
+		poly<T> operator/(const poly<T> &other) const;
+		poly<T> operator%(const poly<T> &other) const;
 		poly<T> &operator/=(const poly<T> &other);
 		poly<T> &operator%=(const poly<T> &other);
 		
@@ -80,7 +80,7 @@ class poly {
 		operator poly<U>();
 		
 		template <typename U>
-		const poly<U> convert(std::function<U(T)> converter) const;
+		poly<U> convert(std::function<U(T)> converter) const;
 };
 
 template <typename T>
@@ -114,7 +114,7 @@ poly<T>::poly(const poly<T> &other) {
 
 template <typename T>
 void poly<T>::simplify() {
-	while (this->coeffs[this->coeffs.size() - 1] == static_cast<T>(0))
+	while (this->coeffs.size() > 0 && this->coeffs[this->coeffs.size() - 1] == static_cast<T>(0))
 		this->coeffs.pop_back();
 }
 
@@ -196,32 +196,32 @@ poly<T> &poly<T>::operator/=(T constant) {
 }
 
 template <typename T>
-const poly<T> poly<T>::operator+(T constant) const {
+poly<T> poly<T>::operator+(T constant) const {
 	return poly<T>(*this) += constant;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator-(T constant) const {
+poly<T> poly<T>::operator-(T constant) const {
 	return poly<T>(*this) -= constant;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator*(T constant) const {
+poly<T> poly<T>::operator*(T constant) const {
 	return poly<T>(*this) *= constant;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator/(T constant) const {
+poly<T> poly<T>::operator/(T constant) const {
 	return poly<T>(*this) /= constant;
 }
 
 template <typename T>
-const poly<T> operator*(T constant, const poly<T> &p) {
+poly<T> operator*(T constant, const poly<T> &p) {
 	return p*constant;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator-() const {
+poly<T> poly<T>::operator-() const {
 	poly<T> neg();
 	for (int i = 0; i < this->coeffs.size(); i++)
 		neg.coeffs.push_back(-this->coeffs[i]);
@@ -255,23 +255,23 @@ poly<T> &poly<T>::operator-=(const poly<T> &p) {
 }
 
 template <typename T>
-const poly<T> poly<T>::operator+(const poly<T> &p) const {
+poly<T> poly<T>::operator+(const poly<T> &p) const {
 	return poly<T>(*this) += p;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator-(const poly<T> &p) const {
+poly<T> poly<T>::operator-(const poly<T> &p) const {
 	return poly<T>(*this) -= p;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator*(const poly<T> &p) const {
+poly<T> poly<T>::operator*(const poly<T> &p) const {
 	poly<T> ret = poly<T>();
 	for (int i = 0; i <= p.degree() + this->degree(); i++)
-		ret.coeffs.push_back(static_cast<T>(0));
+		ret.coeffs.push_back(this->coeffs[0]*static_cast<T>(0));
 	for (int i = 0; i <= p.degree(); i++) {
 		for (int j = 0; j <= this->degree(); j++) {
-			ret.coeffs[i+j] += this->coeffs[j]*p.coeffs[i];	
+			ret.coeffs[i+j] += this->coeffs[j]*p.coeffs[i];
 		}
 	}
 	return ret;
@@ -285,7 +285,7 @@ poly<T> &poly<T>::operator*=(const poly<T> &p) {
 template <typename T>
 poly<T> &poly<T>::operator<<=(unsigned int len) {
 	for (int i = 0; i < len; i++)
-		this->coeffs.insert(this->coeffs.begin(), static_cast<T>(0));
+		this->coeffs.insert(this->coeffs.begin(), this->coeffs[0]*static_cast<T>(0));
 	return *this;
 }
 
@@ -297,7 +297,7 @@ poly<T> &poly<T>::operator>>=(unsigned int len) {
 } 
 
 template <typename T>
-const qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
+qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 	// Algorithm 3.1.1
 
 	poly<T> r = *this, q;
@@ -319,12 +319,12 @@ const qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 }
 
 template <typename T>
-const poly<T> poly<T>::operator/(const poly<T> &p) const {
+poly<T> poly<T>::operator/(const poly<T> &p) const {
 	return this->divide(p).quotient;
 }
 
 template <typename T>
-const poly<T> poly<T>::operator%(const poly<T> &p) const {
+poly<T> poly<T>::operator%(const poly<T> &p) const {
 	return this->divide(p).remainder;
 }
 
@@ -342,10 +342,10 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, const poly<T> &p) {
 	bool first = true;
 	for (int i = 0; i < p.coeffs.size(); i++) {
-		if (!first)
-			os << " + ";
 		if (p.coeffs[i] == static_cast<T>(0))
 			continue;
+		if (!first)
+			os << " + ";
 		first = false;
 		os << p.coeffs[i];
 		if (i == 1)
@@ -374,7 +374,7 @@ poly<T>::operator poly<U>() {
 
 template <typename T>
 template <typename U>
-const poly<U> poly<T>::convert(std::function<U(T)> converter) const {
+poly<U> poly<T>::convert(std::function<U(T)> converter) const {
 	std::vector<U> vec;
 	for (int i = 0; i < this->coeffs.size(); i++)
 		vec.push_back(converter(this->coeffs[i]));
