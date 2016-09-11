@@ -34,7 +34,7 @@ class poly {
 		
 		void simplify();
 		
-		unsigned int degree() const;
+		int degree() const;
 		const T &operator[](unsigned int exponent) const;
 		
 		poly<T> &operator=(T constant);
@@ -119,9 +119,7 @@ void poly<T>::simplify() {
 }
 
 template <typename T>
-unsigned int poly<T>::degree() const {
-	if (this->coeffs.size() == 0)
-		return 0;
+int poly<T>::degree() const {
 	return this->coeffs.size() - 1;
 }
 
@@ -222,7 +220,7 @@ poly<T> operator*(T constant, const poly<T> &p) {
 
 template <typename T>
 poly<T> poly<T>::operator-() const {
-	poly<T> neg();
+	poly<T> neg;
 	for (int i = 0; i < this->coeffs.size(); i++)
 		neg.coeffs.push_back(-this->coeffs[i]);
 	return neg;
@@ -230,6 +228,10 @@ poly<T> poly<T>::operator-() const {
 
 template <typename T>
 poly<T> &poly<T>::operator+=(const poly<T> &p) {
+	if (this->coeffs.size() == 0)
+		return (*this = p);
+	if (p.coeffs.size() == 0)
+		return *this;
 	int d = this->degree();
 	if (d > p.degree())
 		d = p.degree();
@@ -243,6 +245,10 @@ poly<T> &poly<T>::operator+=(const poly<T> &p) {
 
 template <typename T>
 poly<T> &poly<T>::operator-=(const poly<T> &p) {
+	if (this->coeffs.size() == 0)
+		return (*this = (-p));
+	if (p.coeffs.size() == 0)
+		return *this;
 	int d = this->degree();
 	if (d > p.degree())
 		d = p.degree();
@@ -266,6 +272,10 @@ poly<T> poly<T>::operator-(const poly<T> &p) const {
 
 template <typename T>
 poly<T> poly<T>::operator*(const poly<T> &p) const {
+	if (this->coeffs.size() == 0)
+		return *this;
+	if (p.coeffs.size() == 0)
+		return p;
 	poly<T> ret = poly<T>();
 	for (int i = 0; i <= p.degree() + this->degree(); i++)
 		ret.coeffs.push_back(this->coeffs[0]*static_cast<T>(0));
@@ -284,6 +294,8 @@ poly<T> &poly<T>::operator*=(const poly<T> &p) {
 
 template <typename T>
 poly<T> &poly<T>::operator<<=(unsigned int len) {
+	if (this->coeffs.size() == 0)
+		return *this;
 	for (int i = 0; i < len; i++)
 		this->coeffs.insert(this->coeffs.begin(), this->coeffs[0]*static_cast<T>(0));
 	return *this;
@@ -291,6 +303,8 @@ poly<T> &poly<T>::operator<<=(unsigned int len) {
 
 template <typename T>
 poly<T> &poly<T>::operator>>=(unsigned int len) {
+	if (this->coeffs.size() == 0)
+		return *this;
 	for (int i = 0; i < len; i++)
 		this->coeffs.erase(this->coeffs.begin());
 	return *this;
