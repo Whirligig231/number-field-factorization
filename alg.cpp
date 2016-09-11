@@ -20,3 +20,21 @@ std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v) {
 
 	return std::make_pair(a1, b1);
 }
+
+std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v) {
+	// Algorithm 3.5.6
+	
+	Z r = p;
+	ZN_X g = ((Z_X(1) - (u*a1) - (v*b1))/p).convert(to_mod(r));
+	
+	// As in the above function, here we divide v*g by a1.
+	ZN_X t = (v.convert(to_mod(r))*g) / a1.convert(to_mod(r));
+	
+	Z_X u0 = static_cast<Z_X>(u.convert(to_mod(r))*g + b1.convert(to_mod(r))*t);
+	Z_X v0 = static_cast<Z_X>(v.convert(to_mod(r))*g - a1.convert(to_mod(r))*t);
+	
+	Z_X u1 = u + p*u0;
+	Z_X v1 = v + p*v0;
+	
+	return std::make_pair(u1, v1);
+}
