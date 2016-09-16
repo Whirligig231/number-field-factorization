@@ -29,14 +29,10 @@ std::vector<ZN_X> berlekamp_small_p(ZN_X a) {
 	for (int k = 0; k < a.degree(); k++)
 		for (int i = 0; i < a.degree(); i++)
 				q(i, k) = (q_polys[k])[i];
-			
-	std::cout << q << std::endl;
-	
+
 	mat<ZN> q2 = q - mat<ZN>::Identity(a.degree(), a.degree());
 	
 	std::vector<vec<ZN>> v = kernel(q2);
-	
-	std::cout << v[0] << std::endl << v[1] << std::endl;
 	
 	std::vector<ZN_X> e;
 	e.push_back(a);
@@ -50,9 +46,7 @@ std::vector<ZN_X> berlekamp_small_p(ZN_X a) {
 		
 		int e_current_size = e.size();
 		for (int i = 0; i < e_current_size; i++) {
-			
-			std::cout << "pull out " << e[i] << std::endl;
-			
+
 			if (e[i].degree() <= 1)
 				continue;
 			

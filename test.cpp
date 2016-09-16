@@ -8,7 +8,7 @@
 #include "typedefs.h"
 
 int main(int argc, char *argv[]) {
-	Z_X a({1, 6, 2, 4, 9, 1});
+	Z_X a({4, 1, 0, 1});
 	std::cout << a << std::endl;
 	ZN_X a2 = a.convert(to_mod(11));
 	std::cout << a2 << std::endl;
