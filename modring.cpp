@@ -1,5 +1,10 @@
 #include "modring.h"
 
+mod::mod() {
+	this->base = 0;
+	this->value = 0;
+}
+
 mod::mod(mpz_class value) {
 	this->base = 0;
 	this->value = value;

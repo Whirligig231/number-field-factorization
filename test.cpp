@@ -8,15 +8,15 @@
 #include "typedefs.h"
 
 int main(int argc, char *argv[]) {
-	mat<double> A(3, 3);
-	A << 1.0, -1.0, 2.0, -1.0, 1.0, -2.0, 2.0, -2.0, 4.0;
-	std::cout << A << std::endl;
+	Z_X a({1, 6, 2, 4, 9, 1});
+	std::cout << a << std::endl;
+	ZN_X a2 = a.convert(to_mod(11));
+	std::cout << a2 << std::endl;
 	
-	std::vector<vec<double>> basis = kernel(A);
-	for (int i = 0; i < basis.size(); i++)
-		std::cout << basis[i] << std::endl;
-	
-	std::cout << A << std::endl;
+	std::vector<ZN_X> bsp = berlekamp_small_p(a2);
+	std::cout << "Factors:" << std::endl;
+	for (int i = 0; i < bsp.size(); i++)
+		std::cout << bsp[i] << std::endl;
 	
 	return 0;
 }

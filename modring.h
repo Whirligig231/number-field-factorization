@@ -4,6 +4,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <Eigen/Core>
 
 #include "numbers.h"
 
@@ -14,6 +15,7 @@ class mod {
 		mpz_class base, value;
 		
 	public:
+		mod();
 		explicit mod(mpz_class value);
 		mod(mpz_class base, mpz_class value);
 		mod(const mod &other);
@@ -49,10 +51,36 @@ std::function<mod(mpz_class)> to_mod(mpz_class base);
 
 template <>
 inline mod zero<mod>(const mod &reference) {
-	return mod(0, reference.get_base());
+	return mod(reference.get_base(), 0);
 }
 
 template <>
 inline mod one<mod>(const mod &reference) {
-	return mod(1, reference.get_base());
+	return mod(reference.get_base(), 1);
+}
+
+namespace Eigen {
+	
+	template<>
+	struct NumTraits<mod> : GenericNumTraits<mod> {
+		typedef mod Real;
+		typedef mod NonInteger;
+		typedef mod Literal;
+		typedef mod Nested;
+		
+		static inline Real epsilon() { return mod(1, 0); }
+		static inline Real dummy_precision() { return mod(1, 0); }
+		static inline Real digits10() { return mod(1, 0); }
+		
+		enum {
+			IsComplex = 0,
+			IsInteger = 1,
+			ReadCost = 1,
+			AddCost = 5,
+			MulCost = 5,
+			IsSigned = 1,
+			RequireInitialization = 1
+		};
+	};
+	
 }

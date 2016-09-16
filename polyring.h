@@ -37,7 +37,7 @@ class poly {
 		void simplify();
 		
 		int degree() const;
-		const T &operator[](unsigned int exponent) const;
+		T operator[](unsigned int exponent) const;
 		
 		poly<T> &operator=(T constant);
 		poly<T> &operator=(std::vector<T> coeffs);
@@ -83,6 +83,8 @@ class poly {
 		
 		template <typename U>
 		poly<U> convert(std::function<U(T)> converter) const;
+		
+		poly<T> power_mod(mpz_class power);
 };
 
 template <typename T>
@@ -126,7 +128,9 @@ int poly<T>::degree() const {
 }
 
 template <typename T>
-const T &poly<T>::operator[](unsigned int exponent) const {
+T poly<T>::operator[](unsigned int exponent) const {
+	if (exponent > this->degree())
+		return zero<T>(this->coeffs[this->degree()]);
 	return this->coeffs[exponent];
 }
 
@@ -392,8 +396,9 @@ template <typename T>
 template <typename U>
 poly<U> poly<T>::convert(std::function<U(T)> converter) const {
 	std::vector<U> vec;
-	for (int i = 0; i < this->coeffs.size(); i++)
+	for (int i = 0; i < this->coeffs.size(); i++) {
 		vec.push_back(converter(this->coeffs[i]));
+	}
 	return poly<U>(vec);
 }
 
@@ -405,4 +410,33 @@ poly<T> zero(const poly<T> &reference) {
 template <typename T>
 poly<T> one(const poly<T> &reference) {
 	return poly<T>(one<T>(reference.coeffs[reference.degree()]));
+}
+
+template <typename T>
+poly<T> poly<T>::power_mod(mpz_class power) {
+	// N.B. This part of the code technically fails if you try to
+	// use it with a number that has more than 2^31 bits.
+	// Said number would also take up about 268 MB of RAM to store,
+	// so if you need to work with polynomials whose coefficients
+	// are that large, ask your local supercomputer instead of some
+	// random undergrad who's just trying to do his thesis.
+	int numbits = mpz_sizeinbase(power.get_mpz_t(), 2);
+	std::vector<poly<T>> squares;
+	squares.push_back(poly<T>({zero<T>(this->coeffs[this->degree()]), one<T>(this->coeffs[this->degree()])}));
+	for (int i = 1; i < numbits; i++) {
+		poly<T> current = squares[squares.size() - 1];
+		current *= current;
+		current %= *this;
+		squares.push_back(current);
+	}
+	
+	poly<T> product = poly<T>(one<T>(this->coeffs[this->degree()]));
+	for (int i = 0; i < numbits; i++) {
+		if (mpz_tstbit(power.get_mpz_t(), i)) {
+			product *= squares[i];
+			product %= *this;
+		}
+	}
+	
+	return product;
 }
