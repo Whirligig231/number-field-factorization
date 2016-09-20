@@ -85,6 +85,7 @@ class poly {
 		poly<U> convert(std::function<U(T)> converter) const;
 		
 		poly<T> power_mod(mpz_class power);
+		poly<T> power_mod(poly<T> start, mpz_class power);
 };
 
 template <typename T>
@@ -423,6 +424,29 @@ poly<T> poly<T>::power_mod(mpz_class power) {
 	int numbits = mpz_sizeinbase(power.get_mpz_t(), 2);
 	std::vector<poly<T>> squares;
 	squares.push_back(poly<T>({zero<T>(this->coeffs[this->degree()]), one<T>(this->coeffs[this->degree()])}));
+	for (int i = 1; i < numbits; i++) {
+		poly<T> current = squares[squares.size() - 1];
+		current *= current;
+		current %= *this;
+		squares.push_back(current);
+	}
+	
+	poly<T> product = poly<T>(one<T>(this->coeffs[this->degree()]));
+	for (int i = 0; i < numbits; i++) {
+		if (mpz_tstbit(power.get_mpz_t(), i)) {
+			product *= squares[i];
+			product %= *this;
+		}
+	}
+	
+	return product;
+}
+
+template <typename T>
+poly<T> poly<T>::power_mod(poly<T> start, mpz_class power) {
+	int numbits = mpz_sizeinbase(power.get_mpz_t(), 2);
+	std::vector<poly<T>> squares;
+	squares.push_back(start);
 	for (int i = 1; i < numbits; i++) {
 		poly<T> current = squares[squares.size() - 1];
 		current *= current;

@@ -81,12 +81,13 @@ std::vector<vec<T>> kernel(mat<T> m) {
 template <typename T>
 std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 	// Algorithm 3.2.2
+	
+	if (b.degree() < 0)
+		return std::make_tuple(poly<T>(one<T>(a[a.degree()])), poly<T>(zero<T>(a[a.degree()])), a);
+	if (a.degree() < 0)
+		return std::make_tuple(poly<T>(one<T>(b[b.degree()])), poly<T>(zero<T>(b[b.degree()])), b);
 
-	// The following is a weird way to make 1, but it ensures that any
-	// "extranumerary" info from a and b (such as modular base) is retained.
-	// Note that b has to be nonzero for GCD to make sense, so we know b has
-	// a nonzero leading coefficient.
-	poly<T> u = poly<T>(b[b.degree()]/b[b.degree()]);
+	poly<T> u = poly<T>(one<T>(b[b.degree()]));
 	poly<T> d = a;
 	poly<T> v1 = poly<T>();
 	poly<T> v3 = b;
@@ -107,6 +108,7 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 }
 
 std::vector<ZN_X> berlekamp_small_p(ZN_X a);
+std::vector<ZN_X> berlekamp(ZN_X a);
 
 std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v);
 std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v);
