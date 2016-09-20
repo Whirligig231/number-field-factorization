@@ -59,6 +59,11 @@ inline mod one<mod>(const mod &reference) {
 	return mod(reference.get_base(), 1);
 }
 
+template <>
+inline mod from_int<mod>(int n, const mod &reference) {
+	return mod(reference.get_base(), n);
+}
+
 namespace Eigen {
 	
 	template<>

@@ -130,7 +130,7 @@ std::vector<ZN_X> berlekamp(ZN_X a) {
 	while (k < v.size()) {
 
 		// Compute t
-		ZN_X t = ZN_X(zero<ZN>(a[a.degree()]));
+		ZN_X t = ZN_X();
 		for (int i = 0; i < v.size(); i++) {
 			Z ai_z;
 			mpz_urandomm(ai_z.get_mpz_t(), state, p.get_mpz_t());

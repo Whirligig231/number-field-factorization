@@ -86,6 +86,8 @@ class poly {
 		
 		poly<T> power_mod(mpz_class power);
 		poly<T> power_mod(poly<T> start, mpz_class power);
+		
+		poly<T> derivative();
 };
 
 template <typename T>
@@ -414,6 +416,11 @@ poly<T> one(const poly<T> &reference) {
 }
 
 template <typename T>
+poly<T> from_int(int n, const poly<T> &reference) {
+	return poly<T>(from_int<T>(n, reference.coeffs[reference.degree()]));
+}
+
+template <typename T>
 poly<T> poly<T>::power_mod(mpz_class power) {
 	// N.B. This part of the code technically fails if you try to
 	// use it with a number that has more than 2^31 bits.
@@ -463,4 +470,17 @@ poly<T> poly<T>::power_mod(poly<T> start, mpz_class power) {
 	}
 	
 	return product;
+}
+
+template <typename T>
+poly<T> poly<T>::derivative() {
+	if (this->degree() < 1)
+		return poly<T>();
+	
+	std::vector<T> coeffs;
+	for (int i = 1; i <= this->degree(); i++) {
+		coeffs.push_back(from_int<T>(i, this->coeffs[i]) * this->coeffs[i]);
+	}
+	
+	return poly<T>(coeffs);
 }
