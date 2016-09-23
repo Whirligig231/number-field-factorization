@@ -15,7 +15,7 @@ T from_int(int n, const T &reference) {
 	return static_cast<T>(n);
 }
 
-/*template <>
-inline mpz_class get_gcd<mpz_class>(int n, const mod &reference) {
-	return mod(reference.get_base(), n);
-}*/
+template <typename T>
+T get_gcd(T a, T b) {
+	return gcd(a, b);
+}

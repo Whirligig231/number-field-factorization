@@ -71,6 +71,7 @@ class poly {
 		poly<T> &operator>>=(unsigned int len);
 		
 		qr_pair<poly<T>> divide(const poly<T> &other) const;
+		qr_pair<poly<T>> pseudo_divide(const poly<T> &other) const;
 		poly<T> operator/(const poly<T> &other) const;
 		poly<T> operator%(const poly<T> &other) const;
 		poly<T> &operator/=(const poly<T> &other);
@@ -88,6 +89,7 @@ class poly {
 		poly<T> power_mod(poly<T> start, mpz_class power);
 		
 		poly<T> derivative();
+		T content();
 };
 
 template <typename T>
@@ -511,4 +513,16 @@ poly<T> poly<T>::derivative() {
 	}
 	
 	return poly<T>(coeffs);
+}
+
+template <typename T>
+T poly<T>::content() {
+	T g = this->coeffs[this->degree()];
+	for (int i = 0; i < this->degree(); i++) {
+		if (this->coeffs[i] == zero<T>(this->coeffs[i]))
+			continue;
+		g = gcd<T>(this->coeffs[i], g);
+	}
+	
+	return g;
 }
