@@ -342,6 +342,34 @@ qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 }
 
 template <typename T>
+qr_pair<poly<T>> poly<T>::pseudo_divide(const poly<T> &other) const {
+	// Algorithm 3.1.2
+
+	poly<T> r = *this, q;
+	T d = other[other.degree()];
+	int e = this->degree() - other.degree() + 1;
+	while (r.degree() >= other.degree()) {
+		poly<T> s = poly<T>(r[r.degree()]);
+		s <<= r.degree()-other.degree();
+		
+		q *= d;
+		q += s;
+		r *= d;
+		r -= s*other;
+		e--;
+	}
+	
+	T de = one<T>(e);
+	for (int i = 0; i < e; i++)
+		de *= d;
+
+	qr_pair<poly<T>> qr;
+	qr.quotient = de*q;
+	qr.remainder = de*r;
+	return qr;
+}
+
+template <typename T>
 poly<T> poly<T>::operator/(const poly<T> &p) const {
 	return this->divide(p).quotient;
 }
