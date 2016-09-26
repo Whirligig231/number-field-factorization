@@ -8,8 +8,9 @@
 #include "typedefs.h"
 
 int main(int argc, char *argv[]) {
-	Z_X a({1, 4, -3, 5});
-	std::cout << a.derivative() << std::endl;
+	Z_X a({-12, 2, 2});
+	Z_X b({36, 24, 4});
+	std::cout << sub_resultant_gcd(a, b) << std::endl;
 	
 	return 0;
 }

@@ -107,6 +107,63 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 	return std::make_tuple(u, v, d);
 }
 
+template <typename T>
+poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
+	// Algorithm 3.3.1
+	
+	if (b.degree() > a.degree())
+		return sub_resultant_gcd(b, a);
+	if (b.degree() < 0)
+		return a;
+	
+	T ac = a.content();
+	T bc = b.content();
+	T d = get_gcd(ac, bc);
+	a /= ac;
+	b /= bc;
+	T g = one<T>(a[a.degree()]);
+	T h = g;
+	int c = 0;
+	int delta = a.degree() - b.degree();
+	while (1) {
+		poly<T> dividend = a;
+		for (int i = 0; i < delta + 1; i++)
+			dividend *= b[b.degree()];
+		poly<T> r = dividend.pseudo_divide(b).remainder;
+		if (r.degree() < 0)
+			break;
+		if (r.degree() == 0) {
+			b = one<T>(r[r.degree()]);
+			break;
+		}
+
+		a = b;
+		b = r;
+		b /= g;
+		for (int i = 0; i < delta; i++)
+			b /= h;
+		c++;
+
+		if (c < 10) {
+			g = a[a.degree()];
+			T h_temp = h;
+			for (int i = 0; i < delta; i++)
+				h *= g;
+			for (int i = 0; i < delta; i++)
+				h /= h_temp;
+		}
+		else {
+			a /= a.content();
+			b /= b.content();
+			g = one<T>(a[a.degree()]);
+			h = g;
+			c = 0;
+		}
+	}
+	
+	return (b/b.content()) * d;
+}
+
 std::vector<ZN_X> berlekamp_small_p(ZN_X a);
 std::vector<ZN_X> berlekamp(ZN_X a);
 

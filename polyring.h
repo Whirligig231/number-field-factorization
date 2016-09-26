@@ -521,7 +521,7 @@ T poly<T>::content() {
 	for (int i = 0; i < this->degree(); i++) {
 		if (this->coeffs[i] == zero<T>(this->coeffs[i]))
 			continue;
-		g = gcd<T>(this->coeffs[i], g);
+		g = get_gcd(this->coeffs[i], g);
 	}
 	
 	return g;
