@@ -19,3 +19,13 @@ template <typename T>
 T get_gcd(T a, T b) {
 	return gcd(a, b);
 }
+
+template <typename T>
+T get_abs(T a) {
+	return abs(a);
+}
+
+template <typename T>
+T get_sqrt(T a) {
+	return sqrt(a);
+}

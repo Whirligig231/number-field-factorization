@@ -8,6 +8,9 @@
 #include "modring.h"
 #include "typedefs.h"
 
+Z choose(int n, int r);
+int log_bound(Z base, Z pow);
+
 template <typename T>
 std::vector<vec<T>> kernel(mat<T> m) {
 	// Algorithm 2.3.1
@@ -166,6 +169,9 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 
 std::vector<ZN_X> berlekamp_small_p(ZN_X a);
 std::vector<ZN_X> berlekamp(ZN_X a);
+std::vector<ZN_X> berlekamp_auto(ZN_X a);
 
 std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v);
 std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v);
+
+std::vector<Z_X> factor(Z_X a);

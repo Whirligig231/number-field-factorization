@@ -90,6 +90,7 @@ class poly {
 		
 		poly<T> derivative();
 		T content();
+		T norm();
 };
 
 template <typename T>
@@ -525,4 +526,14 @@ T poly<T>::content() {
 	}
 	
 	return g;
+}
+
+template <typename T>
+T poly<T>::norm() {
+	T s = get_abs(this->coeffs[this->degree()])*get_abs(this->coeffs[this->degree()]);
+	for (int i = 0; i < this->degree(); i++) {
+		s += get_abs(this->coeffs[i])*get_abs(this->coeffs[i]);
+	}
+	
+	return get_sqrt(s);
 }

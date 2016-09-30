@@ -1,5 +1,52 @@
 #include "alg.h"
 
+Z choose(int n, int r) {
+	if (r <= 0 || r >= n)
+		return 1;
+	
+	return choose(n - 1, r) + choose(n - 1, r - 1);
+}
+
+int log_bound(Z base, Z pow) {
+	// This uses exponentiation by squaring and a binary search
+	// to find the smallest exponent e such that base^e > pow.
+	// This returns an int because in practice the exponent will
+	// never exceed INT_MAX; the value of pow in that case would
+	// occupy nearly the entire 32-bit address space.
+	
+	std::vector<Z> twos; // twos[i] = base^(2^i)
+	twos.push_back(base);
+
+	int high = 1;
+	
+	// Populate the twos array with as much as is needed
+	while (twos[twos.size()-1] <= pow) {
+		twos.push_back(twos[twos.size()-1]*twos[twos.size()-1]);
+		high *= 2;
+	}
+	
+	int low = high/2;
+	
+	// Binary search
+	while (low < high - 1) {
+		int mid = (low + high) / 2;
+		
+		// Compute base^mid
+		Z base_mid = 1;
+		for (int i = 0; i < twos.size(); i++) {
+			if (mid & (1 << i))
+				base_mid *= twos[i];
+		}
+		
+		if (base_mid > pow)
+			high = mid;
+		else
+			low = mid;
+	}
+	
+	return high;
+}
+
 std::vector<ZN_X> berlekamp_small_p(ZN_X a) {
 	// Algorithm 3.4.10
 	
@@ -39,14 +86,15 @@ std::vector<ZN_X> berlekamp_small_p(ZN_X a) {
 	
 	int k = 1;
 	int j = 0;
-	
+
 	while (k < v.size()) {
+		
 		j++;
 		ZN_X t(std::vector<ZN>(v[j].data(), v[j].data() + v[j].size()));
-		
+	
 		int e_current_size = e.size();
 		for (int i = 0; i < e_current_size; i++) {
-
+	
 			if (e[i].degree() <= 1)
 				continue;
 			
@@ -64,7 +112,7 @@ std::vector<ZN_X> berlekamp_small_p(ZN_X a) {
 				if (put_in)
 					f.push_back(gcd);
 			}
-			
+
 			if (f.size() > 1) {
 				e.erase(e.begin() + i);
 				i--;
@@ -184,6 +232,47 @@ std::vector<ZN_X> berlekamp(ZN_X a) {
 	return e;
 }
 
+std::vector<ZN_X> berlekamp_auto(ZN_X a) {
+	Z p = a[a.degree()].get_base();
+	if (p < 3)
+		return berlekamp_small_p(a);
+	return berlekamp(a);
+}
+
+Z coeff_bound(Z_X a) {
+	// Based on Theorem 3.5.1
+	// Given a polynomial a, this returns an upper bound on the absolute values
+	// of the coefficients of factors of a with degree at most deg(a)/2.
+	
+	// Note that we only care about the value of n = deg(b) that maximizes this.
+	// From the formula in Theorem 3.5.1, it is clear that this is the highest
+	// value we can give n, i.e. n = floor(deg(a)/2).
+	
+	// Note that we only care about the value of j that gives the highest result.
+	// If n is even, this value is n/2, which maximizes the values of the two
+	// binomial coefficients in the formula. If n is odd, this value is either
+	// (n+1)/2 or (n-1)/2. In the former case, the second coefficient will be
+	// larger, while in the latter case, the first coefficient will be larger.
+	// The values of the two coefficients switch in these cases; call them c_1
+	// and c_2, with c_1 <= c_2.
+	
+	// Now we know that |a| >= |a_m|, and all of these quantities are going to
+	// be nonnegative integers. If |a_m| <= |a| and c_1 <= c_2, then
+	// |a_m| c_2 + |a| c_1 <= |a_m| c_1 + |a| c_2.
+	// So we want to multiply |a| by c_2, the larger coefficient; thus the
+	// first coefficient should be larger, and we use j = (n-1)/2.
+	
+	// Summing up this information, no pun intended, we will set j = floor(n/2).
+	
+	int n = a.degree()/2;
+	int j = n/2;
+	
+	// We add one because the square root may be rounded down; we want an upper bound
+	Z a_norm = a.norm() + 1;
+	Z a_m = get_abs(a[a.degree()]);
+	return choose(n-1, j)*a_norm + choose(n-1, j-1)*a_m;
+}
+
 std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v) {
 	// Algorithm 3.5.5
 
@@ -221,4 +310,24 @@ std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v) {
 	Z_X v1 = v + p*v0;
 	
 	return std::make_pair(u1, v1);
+}
+
+std::vector<Z_X> factor(Z_X a) {
+	// Algorithm 3.5.7
+	
+	Z c = a.content();
+	a /= c;
+	Z_X u = a;
+	u /= sub_resultant_gcd(a, a.derivative());
+	
+	Z p = 1;
+	do
+		mpz_nextprime(p.get_mpz_t(), p.get_mpz_t());
+	while (std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
+	
+	std::vector<ZN_X> u_factors = berlekamp_auto(u.convert(to_mod(p)));
+	
+	Z bound = coeff_bound(u);
+	
+	return std::vector<Z_X>();
 }
