@@ -71,6 +71,7 @@ class poly {
 		poly<T> &operator>>=(unsigned int len);
 		
 		qr_pair<poly<T>> divide(const poly<T> &other) const;
+		qr_pair<poly<T>> ring_exact_divide(const poly<T> &other) const;
 		qr_pair<poly<T>> pseudo_divide(const poly<T> &other) const;
 		poly<T> operator/(const poly<T> &other) const;
 		poly<T> operator%(const poly<T> &other) const;
@@ -334,6 +335,27 @@ qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 		q += s;
 
 		poly<T> sb = other*r[r.degree()]*invlb;
+		sb <<= r.degree()-other.degree();
+		r -= sb;
+	}
+
+	qr_pair<poly<T>> qr;
+	qr.quotient = q;
+	qr.remainder = r;
+	return qr;
+}
+
+template <typename T>
+qr_pair<poly<T>> poly<T>::ring_exact_divide(const poly<T> &other) const {
+	// Algorithm 3.1.1
+
+	poly<T> r = *this, q;
+	while (r.degree() >= other.degree()) {
+		poly<T> s = poly<T>(r[r.degree()]/(other[other.degree()]));
+		s <<= r.degree()-other.degree();
+		q += s;
+
+		poly<T> sb = other*r[r.degree()]/(other[other.degree()]);
 		sb <<= r.degree()-other.degree();
 		r -= sb;
 	}

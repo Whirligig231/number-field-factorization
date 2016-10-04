@@ -47,12 +47,10 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
-	Z base = 3;
-	Z pow = 26;
-	for (int i = 0; i < 163591; i++)
-		pow *= 3;
-	
-	std::cout << log_bound(base, pow) << std::endl;
+	Z_X a({300, 580, 502, 354, 176, 32});
+	std::vector<Z_X> factors = factor(a);
+	for (int i = 0; i < factors.size(); i++)
+		std::cout << factors[i] << std::endl;
 	
 	return 0;
 }

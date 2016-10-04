@@ -312,22 +312,228 @@ std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v) {
 	return std::make_pair(u1, v1);
 }
 
+std::pair<Z_X, Z_X> multi_hensel_lift(Z p, int exp, Z_X a, Z_X b, Z_X c) {
+	// Let c = ab (mod p); then this lifts this factorization to a factorization
+	// c = a'b' (mod p^exp).
+	
+	Z q = p;
+	Z_X u, v;
+	
+	// Compute u, v using Euclid
+	std::tuple<ZN_X, ZN_X, ZN_X> uvr = extended_gcd(a.convert(to_mod(p)), b.convert(to_mod(p)));
+	
+	ZN_X un, vn;
+	un = std::get<0>(uvr);
+	vn = std::get<1>(uvr);
+	
+	// Note that this will give us r = a constant, but not necessarily 1.
+	// So we adjust for this.
+	
+	ZN r = (un*a.convert(to_mod(p)) + vn*b.convert(to_mod(p)))[0];
+	un /= r;
+	vn /= r;
+	
+	u = static_cast<Z_X>(un);
+	v = static_cast<Z_X>(vn);
+
+	int exp_current = 1;
+	while (exp_current < exp) {
+		// Run 3.5.5 and 3.5.6, squaring p and q
+		std::pair<Z_X, Z_X> hensel1 = hensel_lift(p, q, a, b, c, u, v);
+		Z_X a1 = hensel1.first;
+		Z_X b1 = hensel1.second;
+		std::pair<Z_X, Z_X> hensel2 = quad_hensel_lift(p, q, a1, b1, u, v);
+		Z_X u1 = hensel2.first;
+		Z_X v1 = hensel2.second;
+		
+		// Note that p = q = r.
+		// So now c = a1*b1 mod q^2 and u1*a1 + v1*b1 = 1 mod p^2.
+		// We can thus replace a, b, u, v, p, q by a1, b1, u1, v1, p^2, q^2.
+		
+		a = a1;
+		b = b1;
+		u = u1;
+		v = v1;
+		p *= p;
+		q *= q;
+		exp_current <<= 1;
+	}
+	
+	// We may have lifted too far (i.e. to p^exp2 where exp2 > exp).
+	// So to reduce explosion issues, we take the coefficients mod p^exp.
+	Z pexp = 1;
+	for (int i = 0; i < exp; i++)
+		pexp *= p;
+	a = static_cast<Z_X>(a.convert(to_mod(pexp)));
+	b = static_cast<Z_X>(b.convert(to_mod(pexp)));
+	
+	return std::make_pair(a, b);
+}
+
+std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c) {
+	// This is a generalization of the above algorithm to more than two factors.
+	// We do this inductively.
+	
+	std::vector<Z_X> ai_new;
+	
+	// The inductive process is as follows: first, compute f, the product of all
+	// but the first ai. Then c = f*ai[0] mod p.
+	// Lift this factorization to a factorization f'*ai_new[0] mod p^exp.
+	// Note that f' = f mod p, so f' satisfies the same condition as f on the
+	// remaining factors. We repeat the process.
+	
+	std::vector<Z_X> fi;
+	Z_X current_tail(1);
+	for (int i = 1; i < ai.size(); i++) {
+		current_tail *= ai[ai.size() - i];
+		fi.insert(fi.begin(), current_tail);
+	}
+	
+	Z_X sub_product = c;
+	for (int i = 0; i < ai.size() - 1; i++) {
+		// Now sub_product = ai[i]*fi[i] mod p.
+		// Apply Hensel lifting to lift this factorization to mod p^exp.
+		
+		std::pair<Z_X, Z_X> hensel = multi_hensel_lift(p, exp, ai[i], fi[i], sub_product);
+		
+		// Append the new ai[i] to the factor list ...
+		ai_new.push_back(hensel.first);
+		
+		// ... and use the new fi[i] as the next sub_product.
+		// Note that it's still congruent to the old fi[i] mod p.
+		sub_product = hensel.second;
+	}
+	
+	// Push the final sub_product, as it will only have one factor in it.
+	ai_new.push_back(sub_product);
+	return ai_new;
+}
+
 std::vector<Z_X> factor(Z_X a) {
 	// Algorithm 3.5.7
-	
+
 	Z c = a.content();
 	a /= c;
 	Z_X u = a;
-	u /= sub_resultant_gcd(a, a.derivative());
-	
+	u = u.ring_exact_divide(sub_resultant_gcd(a, a.derivative())).quotient;
+
 	Z p = 1;
 	do
 		mpz_nextprime(p.get_mpz_t(), p.get_mpz_t());
 	while (std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
-	
+
 	std::vector<ZN_X> u_factors = berlekamp_auto(u.convert(to_mod(p)));
 	
 	Z bound = coeff_bound(u);
+	int exp = log_bound(p, 2*u[u.degree()]*bound);
 	
-	return std::vector<Z_X>();
+	Z pexp = 1;
+	for (int i = 0; i < exp; i++)
+		pexp *= p;
+	
+	std::vector<Z_X> ui;
+	for (int i = 0; i < u_factors.size(); i++)
+		ui.push_back(static_cast<Z_X>(u_factors[i]));
+	ui = poly_hensel_lift(p, exp, ui, u);
+	
+	// Convert to monic (poly_hensel_lift doesn't do this)
+	for (int i = 0; i < ui.size(); i++) {
+		ZN_X ui_n = ui[i].convert(to_mod(pexp));
+		ui_n /= ui_n[ui_n.degree()];
+		ui[i] = static_cast<Z_X>(ui_n);
+	}
+	
+	std::vector<Z_X> result;
+	
+	int d = 1;
+	while (2*d <= ui.size()) {
+		
+		// Initialize a combination of length d
+		std::vector<int> combination;
+		for (int i = 0; i < d; i++)
+			combination.push_back(i);
+		
+		bool terminate_early = false;
+		
+		while (true) {
+			// We want to include ui[0] if d = 1/2 r
+			if (2*d == ui.size() && combination[0] > 0)
+				break;
+			
+			Z_X v_bar(1);
+			for (int i = 0; i < d; i++)
+				v_bar *= ui[combination[i]];
+			
+			Z_X v;
+			
+			if (v_bar.degree()*2 <= u.degree()) {
+				v = static_cast<Z_X>((v_bar * u[u.degree()]).convert(to_mod(pexp)));
+			}
+			else {
+				v = static_cast<Z_X>(u.convert(to_mod(pexp)) / v_bar.convert(to_mod(pexp)));
+			}
+			
+			// The coefficients will be in [0, p^e - 1];
+			// let's fix this!
+			for (int i = 0; i <= v.degree(); i++)
+				if (v[i]*2 > pexp)
+					v[i] -= pexp;
+			
+			Z_X remainder = (u*u.degree()) % v;
+			if (remainder.degree() < 0) {
+				// We did it! We found a factor!
+				Z_X f = v / v.content();
+				
+				Z_X a_temp = a;
+				while (true) {
+					qr_pair<Z_X> qr = a_temp.divide(f);
+					if (qr.remainder.degree() >= 0)
+						break;
+					a_temp = qr.quotient;
+					result.push_back(f);
+				}
+				
+				u /= f;
+				if (2*d <= ui.size()) {
+					for (int i = 0; i < combination.size(); i++)
+						ui.erase(ui.begin() + combination[i] - i);
+				}
+				else {
+					std::vector<Z_X> new_ui;
+					for (int i = 0; i < combination.size(); i++)
+						new_ui.push_back(ui[combination[i]]);
+					ui = new_ui;
+				}
+				
+				if (2*d > ui.size())
+					terminate_early = true;
+				
+				d--;
+				break;
+			}
+			
+			// Increment combination
+			int start_point = d - 1;
+			combination[d - 1]++;
+			while (combination[d - 1] >= ui.size()) {
+				start_point--;
+				if (start_point < 0)
+					break;
+				combination[start_point]++;
+				for (int i = start_point + 1; i < ui.size(); i++)
+					combination[i] = combination[i-1] + 1;
+			}
+			if (start_point < 0)
+				break;
+		}
+		
+		if (terminate_early)
+			break;
+		
+		d++;
+		
+	}
+	
+	result.push_back(u / u.content());
+	return result;
 }

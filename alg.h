@@ -128,7 +128,7 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 	T h = g;
 	int c = 0;
 	int delta = a.degree() - b.degree();
-	while (1) {
+	while (true) {
 		poly<T> dividend = a;
 		for (int i = 0; i < delta + 1; i++)
 			dividend *= b[b.degree()];
@@ -139,7 +139,7 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 			b = one<T>(r[r.degree()]);
 			break;
 		}
-
+		
 		a = b;
 		b = r;
 		b /= g;
@@ -173,5 +173,7 @@ std::vector<ZN_X> berlekamp_auto(ZN_X a);
 
 std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v);
 std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v);
+std::pair<Z_X, Z_X> multi_hensel_lift(Z p, int exp, Z_X a, Z_X b, Z_X c);
+std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c);
 
 std::vector<Z_X> factor(Z_X a);
