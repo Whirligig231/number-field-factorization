@@ -98,6 +98,8 @@ mod mod::inv() const {
 	mpz_gcdext(g.get_mpz_t(), s.get_mpz_t(), NULL, this->value.get_mpz_t(), this->base.get_mpz_t());
 	if (g != 1) {
 		std::cout << "ERROR: attempt to invert non-invertible element" << std::endl;
+		int x = 0;
+		x = 1/x;
 	}
 	mpz_mod(s.get_mpz_t(), s.get_mpz_t(), this->base.get_mpz_t());
 	return mod(this->base, s);

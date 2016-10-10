@@ -38,6 +38,7 @@ class poly {
 		
 		int degree() const;
 		T operator[](unsigned int exponent) const;
+		void set(unsigned int exponent, T new_value);
 		
 		poly<T> &operator=(T constant);
 		poly<T> &operator=(std::vector<T> coeffs);
@@ -139,6 +140,13 @@ T poly<T>::operator[](unsigned int exponent) const {
 	if (exponent > this->degree())
 		return zero<T>(this->coeffs[this->degree()]);
 	return this->coeffs[exponent];
+}
+
+template <typename T>
+void poly<T>::set(unsigned int exponent, T new_value) {
+	while (exponent > this->degree())
+		this->coeffs.push_back(zero<T>(this->coeffs[this->degree()]));
+	this->coeffs[exponent] = new_value;
 }
 
 template <typename T>

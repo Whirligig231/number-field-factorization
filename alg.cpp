@@ -416,11 +416,15 @@ std::vector<Z_X> factor(Z_X a) {
 	a /= c;
 	Z_X u = a;
 	u = u.ring_exact_divide(sub_resultant_gcd(a, a.derivative())).quotient;
+	if (u[u.degree()] < 0)
+		u = -u;
+	
+	// std::cout << "u = " << u << std::endl;
 
 	Z p = 1;
 	do
 		mpz_nextprime(p.get_mpz_t(), p.get_mpz_t());
-	while (std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
+	while (u[u.degree()] % p == 0 || std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
 
 	std::vector<ZN_X> u_factors = berlekamp_auto(u.convert(to_mod(p)));
 	
@@ -430,6 +434,8 @@ std::vector<Z_X> factor(Z_X a) {
 	Z pexp = 1;
 	for (int i = 0; i < exp; i++)
 		pexp *= p;
+	
+	// std::cout << "p^e = " << p << "^" << exp << " = " << pexp << std::endl;
 	
 	std::vector<Z_X> ui;
 	for (int i = 0; i < u_factors.size(); i++)
@@ -441,8 +447,9 @@ std::vector<Z_X> factor(Z_X a) {
 		ZN_X ui_n = ui[i].convert(to_mod(pexp));
 		ui_n /= ui_n[ui_n.degree()];
 		ui[i] = static_cast<Z_X>(ui_n);
+		// std::cout << "u" << i << " = " << ui[i] << std::endl;
 	}
-	
+
 	std::vector<Z_X> result;
 	
 	int d = 1;
@@ -454,6 +461,7 @@ std::vector<Z_X> factor(Z_X a) {
 			combination.push_back(i);
 		
 		bool terminate_early = false;
+		bool reset_this_d = false;
 		
 		while (true) {
 			// We want to include ui[0] if d = 1/2 r
@@ -464,6 +472,8 @@ std::vector<Z_X> factor(Z_X a) {
 			for (int i = 0; i < d; i++)
 				v_bar *= ui[combination[i]];
 			
+			// std::cout << "v_bar = " << v_bar << std::endl;
+
 			Z_X v;
 			
 			if (v_bar.degree()*2 <= u.degree()) {
@@ -476,24 +486,34 @@ std::vector<Z_X> factor(Z_X a) {
 			// The coefficients will be in [0, p^e - 1];
 			// let's fix this!
 			for (int i = 0; i <= v.degree(); i++)
-				if (v[i]*2 > pexp)
-					v[i] -= pexp;
-			
-			Z_X remainder = (u*u.degree()) % v;
-			if (remainder.degree() < 0) {
+				if (v[i]*2 >= pexp)
+					v.set(i, v[i] - pexp);
+				
+			// std::cout << "v = " << v << std::endl;
+
+			qr_pair<Z_X> test_qr = (u*u[u.degree()]).pseudo_divide(v);
+			Z modbase = 1;
+			for (int i = 0; i < u.degree() - v.degree() + 1; i++)
+				modbase *= v[v.degree()];
+			if (test_qr.remainder.degree() < 0 && test_qr.quotient.content() % modbase == 0) {
 				// We did it! We found a factor!
 				Z_X f = v / v.content();
-				
+
 				Z_X a_temp = a;
 				while (true) {
-					qr_pair<Z_X> qr = a_temp.divide(f);
+					qr_pair<Z_X> qr = a_temp.pseudo_divide(f);
+					modbase = 1;
+					for (int i = 0; i < a_temp.degree() - f.degree() + 1; i++)
+						modbase *= f[f.degree()];
 					if (qr.remainder.degree() >= 0)
 						break;
-					a_temp = qr.quotient;
+					if (qr.quotient.content() % modbase != 0)
+						break;
+					a_temp = a_temp.ring_exact_divide(f).quotient;
 					result.push_back(f);
 				}
-				
-				u /= f;
+
+				u = u.ring_exact_divide(f).quotient;
 				if (2*d <= ui.size()) {
 					for (int i = 0; i < combination.size(); i++)
 						ui.erase(ui.begin() + combination[i] - i);
@@ -504,14 +524,14 @@ std::vector<Z_X> factor(Z_X a) {
 						new_ui.push_back(ui[combination[i]]);
 					ui = new_ui;
 				}
-				
+
 				if (2*d > ui.size())
 					terminate_early = true;
 				
 				d--;
 				break;
 			}
-			
+
 			// Increment combination
 			int start_point = d - 1;
 			combination[d - 1]++;
@@ -534,6 +554,20 @@ std::vector<Z_X> factor(Z_X a) {
 		
 	}
 	
-	result.push_back(u / u.content());
+	Z_X f = u / u.content();
+	Z_X a_temp = a;
+	while (true) {
+		qr_pair<Z_X> qr = a_temp.pseudo_divide(f);
+		Z modbase = 1;
+		for (int i = 0; i < a_temp.degree() - f.degree() + 1; i++)
+			modbase *= f[f.degree()];
+		if (qr.remainder.degree() >= 0)
+			break;
+		if (qr.quotient.content() % modbase != 0)
+			break;
+		a_temp = a_temp.ring_exact_divide(f).quotient;
+		result.push_back(f);
+	}
+	result.push_back(Z_X(c));
 	return result;
 }

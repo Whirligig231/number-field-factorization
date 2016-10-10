@@ -171,6 +171,8 @@ std::vector<ZN_X> berlekamp_small_p(ZN_X a);
 std::vector<ZN_X> berlekamp(ZN_X a);
 std::vector<ZN_X> berlekamp_auto(ZN_X a);
 
+Z coeff_bound(Z_X a);
+
 std::pair<Z_X, Z_X> hensel_lift(Z p, Z q, Z_X a, Z_X b, Z_X c, Z_X u, Z_X v);
 std::pair<Z_X, Z_X> quad_hensel_lift(Z p, Z q, Z_X a1, Z_X b1, Z_X u, Z_X v);
 std::pair<Z_X, Z_X> multi_hensel_lift(Z p, int exp, Z_X a, Z_X b, Z_X c);
