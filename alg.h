@@ -130,8 +130,8 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 	int delta = a.degree() - b.degree();
 	while (true) {
 		poly<T> dividend = a;
-		for (int i = 0; i < delta + 1; i++)
-			dividend *= b[b.degree()];
+		//for (int i = 0; i < delta + 1; i++) This is stupid, why did I do it?
+		//	dividend *= b[b.degree()];
 		poly<T> r = dividend.pseudo_divide(b).remainder;
 		if (r.degree() < 0)
 			break;
@@ -165,6 +165,64 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 	}
 	
 	return (b/b.content()) * d;
+}
+
+template <typename T>
+T sub_resultant(poly<T> a, poly<T> b) {
+	// Algorithm 3.3.7
+	
+	if (a.degree() < 0)
+		return zero<T>(b[b.degree()]);
+	if (b.degree() < 0)
+		return zero<T>(a[a.degree()]);
+	
+	T a_cont = a.content();
+	T b_cont = b.content();
+	a /= a_cont;
+	b /= b_cont;
+	T g = one<T>(a[a.degree()]);
+	T h = one<T>(a[a.degree()]);
+	T s = one<T>(a[a.degree()]);
+	T t = get_pow(a_cont, b.degree())*get_pow(b_cont, a.degree());
+	if (a.degree() < b.degree()) {
+		poly<T> temp = a;
+		a = b;
+		b = temp;
+	}
+	
+	if (a.degree() % 2 && b.degree() % 2)
+		s = -s;
+	
+	do {
+		int delta = a.degree() - b.degree();
+		
+		if (a.degree() % 2 && b.degree() % 2)
+			s = -s;
+
+		poly<T> r = a.pseudo_divide(b).remainder;
+		
+		a = b;
+		b = r;
+		b /= g;
+		for (int i = 0; i < delta; i++)
+			b /= h;
+		
+		g = a[a.degree()];
+		T h2 = get_pow(g, delta);
+		if (delta == 0)
+			h2 *= h;
+		for (int i = 1; i < delta; i++)
+			h2 /= h;
+		h = h2;
+	} while (b.degree() > 0);
+	
+	T h2 = get_pow(b[b.degree()], a.degree());
+	if (a.degree() == 0)
+		h2 *= h;
+	for (int i = 1; i < a.degree(); i++)
+		h2 /= h;
+	
+	return s*t*h2;
 }
 
 std::vector<ZN_X> berlekamp_small_p(ZN_X a);

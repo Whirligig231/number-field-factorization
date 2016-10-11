@@ -91,6 +91,7 @@ class poly {
 		poly<T> power_mod(poly<T> start, mpz_class power);
 		
 		poly<T> derivative();
+		poly<T> reverse();
 		T content();
 		T norm();
 };
@@ -541,6 +542,16 @@ poly<T> poly<T>::derivative() {
 	std::vector<T> coeffs;
 	for (int i = 1; i <= this->degree(); i++) {
 		coeffs.push_back(from_int<T>(i, this->coeffs[i]) * this->coeffs[i]);
+	}
+	
+	return poly<T>(coeffs);
+}
+
+template <typename T>
+poly<T> poly<T>::reverse() {
+	std::vector<T> coeffs;
+	for (int i = 0; i <= this->degree(); i++) {
+		coeffs.insert(coeffs.begin(), this->coeffs[i]);
 	}
 	
 	return poly<T>(coeffs);

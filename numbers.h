@@ -29,3 +29,13 @@ template <typename T>
 T get_sqrt(T a) {
 	return sqrt(a);
 }
+
+template <typename T>
+T get_pow(T a, int exp) {
+	T result = one<T>(a);
+	for (int i = 0; i < exp; i++)
+		result *= a;
+	for (int i = 0; i < -exp; i++)
+		result /= a;
+	return result;
+}

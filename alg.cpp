@@ -187,8 +187,6 @@ std::vector<ZN_X> berlekamp(ZN_X a) {
 			t += ai*ti;
 		}
 		
-		// TODO: make this actually do step 4
-		
 		int e_current_size = e.size();
 		for (int i = 0; i < e_current_size; i++) {
 
@@ -411,6 +409,9 @@ std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c) {
 
 std::vector<Z_X> factor(Z_X a) {
 	// Algorithm 3.5.7
+	
+	if (a.degree() < 0)
+		return std::vector<Z_X>({a});
 
 	Z c = a.content();
 	a /= c;
@@ -418,6 +419,36 @@ std::vector<Z_X> factor(Z_X a) {
 	u = u.ring_exact_divide(sub_resultant_gcd(a, a.derivative())).quotient;
 	if (u[u.degree()] < 0)
 		u = -u;
+	
+	// Cast out any factors of x
+	int factors_of_x = 0;
+	if (u[0] == 0) {
+		u >>= 1;
+		Z_X a_temp = a;
+		while (a_temp[0] == 0) {
+			a_temp >>= 1;
+			factors_of_x++;
+		}
+	}
+	
+	// Check if u is constant
+	if (u.degree() < 1) {
+		std::vector<Z_X> result;
+		
+		result.push_back(Z_X(c));
+	
+		for (int i = 0; i < factors_of_x; i++)
+			result.insert(result.begin(), Z_X({0, 1}));
+		
+		return result;
+	}
+	
+	// If |u_0| < |u_n|, reverse U and note this down for later
+	bool is_reversed = false;
+	if (get_abs(u[0]) < get_abs(u[u.degree()])) {
+		is_reversed = true;
+		u = u.reverse();
+	}
 	
 	// std::cout << "u = " << u << std::endl;
 
@@ -449,7 +480,7 @@ std::vector<Z_X> factor(Z_X a) {
 		ui[i] = static_cast<Z_X>(ui_n);
 		// std::cout << "u" << i << " = " << ui[i] << std::endl;
 	}
-
+	
 	std::vector<Z_X> result;
 	
 	int d = 1;
@@ -490,46 +521,57 @@ std::vector<Z_X> factor(Z_X a) {
 					v.set(i, v[i] - pexp);
 				
 			// std::cout << "v = " << v << std::endl;
+			
+			// Cohen recommends checking for divisibility of the constant terms first.
+			if (u[u.degree()]*u[0] % v[0] == 0) {
 
-			qr_pair<Z_X> test_qr = (u*u[u.degree()]).pseudo_divide(v);
-			Z modbase = 1;
-			for (int i = 0; i < u.degree() - v.degree() + 1; i++)
-				modbase *= v[v.degree()];
-			if (test_qr.remainder.degree() < 0 && test_qr.quotient.content() % modbase == 0) {
-				// We did it! We found a factor!
-				Z_X f = v / v.content();
+				qr_pair<Z_X> test_qr = (u*u[u.degree()]).pseudo_divide(v);
+				Z modbase = 1;
+				for (int i = 0; i < u.degree() - v.degree() + 1; i++)
+					modbase *= v[v.degree()];
+				if (test_qr.remainder.degree() < 0 && test_qr.quotient.content() % modbase == 0) {
+					// We did it! We found a factor!
+					Z_X f = v / v.content();
+					
+					if (is_reversed)
+						f = f.reverse();
 
-				Z_X a_temp = a;
-				while (true) {
-					qr_pair<Z_X> qr = a_temp.pseudo_divide(f);
-					modbase = 1;
-					for (int i = 0; i < a_temp.degree() - f.degree() + 1; i++)
-						modbase *= f[f.degree()];
-					if (qr.remainder.degree() >= 0)
-						break;
-					if (qr.quotient.content() % modbase != 0)
-						break;
-					a_temp = a_temp.ring_exact_divide(f).quotient;
-					result.push_back(f);
+					Z_X a_temp = a;
+					while (true) {
+						qr_pair<Z_X> qr = a_temp.pseudo_divide(f);
+						modbase = 1;
+						for (int i = 0; i < a_temp.degree() - f.degree() + 1; i++)
+							modbase *= f[f.degree()];
+						if (qr.remainder.degree() >= 0)
+							break;
+						if (qr.quotient.content() % modbase != 0)
+							break;
+						a_temp = a_temp.ring_exact_divide(f).quotient;
+						result.push_back(f);
+					}
+					
+					if (is_reversed)
+						f = f.reverse();
+
+					u = u.ring_exact_divide(f).quotient;
+					if (2*d <= ui.size()) {
+						for (int i = 0; i < combination.size(); i++)
+							ui.erase(ui.begin() + combination[i] - i);
+					}
+					else {
+						std::vector<Z_X> new_ui;
+						for (int i = 0; i < combination.size(); i++)
+							new_ui.push_back(ui[combination[i]]);
+						ui = new_ui;
+					}
+
+					if (2*d > ui.size())
+						terminate_early = true;
+					
+					d--;
+					break;
 				}
-
-				u = u.ring_exact_divide(f).quotient;
-				if (2*d <= ui.size()) {
-					for (int i = 0; i < combination.size(); i++)
-						ui.erase(ui.begin() + combination[i] - i);
-				}
-				else {
-					std::vector<Z_X> new_ui;
-					for (int i = 0; i < combination.size(); i++)
-						new_ui.push_back(ui[combination[i]]);
-					ui = new_ui;
-				}
-
-				if (2*d > ui.size())
-					terminate_early = true;
 				
-				d--;
-				break;
 			}
 
 			// Increment combination
@@ -556,6 +598,8 @@ std::vector<Z_X> factor(Z_X a) {
 	
 	Z_X f = u / u.content();
 	Z_X a_temp = a;
+	if (is_reversed)
+		f = f.reverse();
 	while (true) {
 		qr_pair<Z_X> qr = a_temp.pseudo_divide(f);
 		Z modbase = 1;
@@ -569,5 +613,9 @@ std::vector<Z_X> factor(Z_X a) {
 		result.push_back(f);
 	}
 	result.push_back(Z_X(c));
+	
+	for (int i = 0; i < factors_of_x; i++)
+		result.insert(result.begin(), Z_X({0, 1}));
+	
 	return result;
 }
