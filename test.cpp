@@ -47,10 +47,10 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
-	Z_X a({0, 0, 2, 8, 12, 8, 2});
-	std::vector<Z_X> factors = factor(a);
-	for (int i = 0; i < factors.size(); i++)
-		std::cout << factors[i] << std::endl;
+	Z_X a({1, 6, 15, 20, 15, 6, 1});
+	Z_X b({1, 1});
+	
+	std::cout << sub_resultant(a, b) << std::endl;
 
 	return 0;
 }

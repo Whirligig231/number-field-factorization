@@ -138,6 +138,8 @@ int poly<T>::degree() const {
 
 template <typename T>
 T poly<T>::operator[](unsigned int exponent) const {
+	if (this->degree() < 0)
+		return zero<T>();
 	if (exponent > this->degree())
 		return zero<T>(this->coeffs[this->degree()]);
 	return this->coeffs[exponent];

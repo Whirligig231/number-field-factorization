@@ -1,6 +1,16 @@
 #pragma once
 
 template <typename T>
+T zero() {
+	return static_cast<T>(0);
+}
+
+template <typename T>
+T one() {
+	return static_cast<T>(1);
+}
+
+template <typename T>
 T zero(const T &reference) {
 	return static_cast<T>(0);
 }
