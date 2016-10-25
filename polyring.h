@@ -480,6 +480,16 @@ poly<T> one(const poly<T> &reference) {
 }
 
 template <typename T>
+poly<T> zero() {
+	return poly<T>();
+}
+
+template <typename T>
+poly<T> one() {
+	return poly<T>(one<T>());
+}
+
+template <typename T>
 poly<T> from_int(int n, const poly<T> &reference) {
 	return poly<T>(from_int<T>(n, reference.coeffs[reference.degree()]));
 }

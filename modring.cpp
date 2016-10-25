@@ -50,22 +50,22 @@ bool mod::operator!=(const mod &other) const {
 
 mod &mod::operator+=(const mod &other) {
 	this->value += other.value;
-	mpz_class base = (this->base == 0) ? other.base : this->base;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
+	this->base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
 	return *this;
 }
 
 mod &mod::operator-=(const mod &other) {
 	this->value -= other.value;
-	mpz_class base = (this->base == 0) ? other.base : this->base;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
+	this->base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
 	return *this;
 }
 
 mod &mod::operator*=(const mod &other) {
 	this->value *= other.value;
-	mpz_class base = (this->base == 0) ? other.base : this->base;
-	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), base.get_mpz_t());
+	this->base = (this->base == 0) ? other.base : this->base;
+	mpz_mod(this->value.get_mpz_t(), this->value.get_mpz_t(), this->base.get_mpz_t());
 	return *this;
 }
 

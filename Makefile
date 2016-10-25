@@ -1,7 +1,7 @@
 test: test.o alg.o modring.o
 	g++ -o test test.o alg.o modring.o -lgmp -lgmpxx -g
 
-test.o: test.cpp polyring.h modring.h alg.h
+test.o: test.cpp polyring.h modring.h polymodring.h alg.h
 	g++ -c test.cpp -std=c++11 -g -isystem /usr/include/eigen3/
 	
 alg.o: alg.cpp alg.h polyring.h modring.h typedefs.h numbers.h

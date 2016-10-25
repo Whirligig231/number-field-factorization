@@ -6,6 +6,7 @@
 
 #include "polyring.h"
 #include "modring.h"
+#include "polymodring.h"
 #include "alg.h"
 #include "typedefs.h"
 
@@ -47,10 +48,13 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
-	Z_X a({1, 6, 15, 20, 15, 6, 1});
-	Z_X b({1, 1});
+	Z_X a({4, 4, 0, 1});
+	Z_X b({1, 0, 4, 5, 3, 2});
+	ZN_X an = a.convert(to_mod(11));
+	ZN_X bn = b.convert(to_mod(11));
+	polymod<ZN> bna(an, bn);
 	
-	std::cout << sub_resultant(a, b) << std::endl;
+	std::cout << bna << std::endl;
 
 	return 0;
 }

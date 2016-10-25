@@ -8,6 +8,8 @@
 #include "modring.h"
 #include "typedefs.h"
 
+#pragma once
+
 Z choose(int n, int r);
 int log_bound(Z base, Z pow);
 
