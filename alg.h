@@ -6,6 +6,7 @@
 #include "numbers.h"
 #include "polyring.h"
 #include "modring.h"
+#include "polymodring.h"
 #include "typedefs.h"
 
 #pragma once
@@ -239,3 +240,21 @@ std::pair<Z_X, Z_X> multi_hensel_lift(Z p, int exp, Z_X a, Z_X b, Z_X c);
 std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c);
 
 std::vector<Z_X> factor(Z_X a);
+std::vector<Q_X> factor(Q_X a);
+
+template <typename T>
+std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
+	// Algorithm 3.6.4
+	// Note that 3.6.4 assumes Q as the base field;
+	// other number fields will also work.
+	
+	if (a.degree() < 0)
+		return std::vector<poly<polymod<T>>>({a});
+
+	poly<polymod<T>> u = a / sub_resultant_gcd(a, a.derivative());
+
+	poly<poly<T>> g = static_cast<poly<poly<T>>>(u);
+	T k = zero<T>(a.leading().get_value().leading());
+	
+	
+}

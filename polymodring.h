@@ -7,7 +7,6 @@
 
 #include "numbers.h"
 #include "polyring.h"
-#include "alg.h"
 
 #pragma once
 

@@ -48,13 +48,10 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
-	Z_X a({4, 4, 0, 1});
-	Z_X b({1, 0, 4, 5, 3, 2});
-	ZN_X an = a.convert(to_mod(11));
-	ZN_X bn = b.convert(to_mod(11));
-	polymod<ZN> bna(an, bn);
+	Z_X f({3, 2, 1});
+	Z_X g({-4, 0, 2});
 	
-	std::cout << bna << std::endl;
+	std::cout << f.compose(g) << std::endl;
 
 	return 0;
 }

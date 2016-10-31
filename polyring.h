@@ -94,6 +94,10 @@ class poly {
 		poly<T> reverse();
 		T content();
 		T norm();
+		T leading();
+		
+		poly<T> compose(poly<T> x);
+		T evaluate(T x);
 };
 
 template <typename T>
@@ -589,4 +593,35 @@ T poly<T>::norm() {
 	}
 	
 	return get_sqrt(s);
+}
+
+template <typename T>
+T poly<T>::leading() {
+	return this->coeffs[this->degree()];
+}
+
+template <typename T>
+poly<T> poly<T>::compose(poly<T> x) {
+	poly<T> result = zero<poly<T>>(x);
+	for (int i = 0; i <= this->degree(); i++) {
+		poly<T> term = this->coeffs[i];
+		for (int j = 0; j < i; j++)
+			term *= x;
+		result += term;
+	}
+	
+	return result;
+}
+
+template <typename T>
+T poly<T>::evaluate(T x) {
+	T result = zero<T>(x);
+	for (int i = 0; i <= this->degree(); i++) {
+		T term = this->coeffs[i];
+		for (int j = 0; j < i; j++)
+			term *= x;
+		result += term;
+	}
+	
+	return result;
 }

@@ -619,3 +619,21 @@ std::vector<Z_X> factor(Z_X a) {
 	
 	return result;
 }
+
+std::vector<Q_X> factor(Q_X a) {
+	// Apply Gauss's lemma
+	
+	Z common_denominator = 1;
+	for (int i = 0; i <= a.degree(); i++) {
+		if (a[i] != 0)
+			common_denominator = lcm(common_denominator, a[i].get_den());
+	}
+	
+	Z_X a2 = static_cast<Z_X>(a * static_cast<Q>(common_denominator));
+	std::vector<Z_X> result2 = factor(a2);
+	std::vector<Q_X> result;
+	for (int i = 0; i < result2.size(); i++)
+		result.push_back(static_cast<Q_X>(result2[i]));
+	result[result.size() - 1] /= common_denominator;
+	return result;
+}
