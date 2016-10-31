@@ -48,10 +48,11 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
-	Z_X f({3, 2, 1});
-	Z_X g({-4, 0, 2});
+	// Z[Y][X]
+	poly<Z_X> orig({Z_X(), Z_X({1, 1}), Z_X({-1, 4})});
 	
-	std::cout << f.compose(g) << std::endl;
+	std::cout << orig << std::endl;
+	std::cout << switch_variables(orig) << std::endl;
 
 	return 0;
 }

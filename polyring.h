@@ -101,6 +101,41 @@ class poly {
 };
 
 template <typename T>
+class util<poly<T>> {
+public:
+	static poly<T> zero();
+	static poly<T> zero(const poly<T> &reference);
+	static poly<T> one();
+	static poly<T> one(const poly<T> &reference);
+	static poly<T> from_int(int n, const poly<T> &reference);
+};
+
+template <typename T>
+poly<T> util<poly<T>>::zero(const poly<T> &reference) {
+	return poly<T>();
+}
+
+template <typename T>
+poly<T> util<poly<T>>::one(const poly<T> &reference) {
+	return poly<T>(util<T>::one(reference[reference.degree()]));
+}
+
+template <typename T>
+poly<T> util<poly<T>>::zero() {
+	return poly<T>();
+}
+
+template <typename T>
+poly<T> util<poly<T>>::one() {
+	return poly<T>(util<T>::one());
+}
+
+template <typename T>
+poly<T> util<poly<T>>::from_int(int n, const poly<T> &reference) {
+	return poly<T>(util<T>::from_int(n, reference.coeffs[reference.degree()]));
+}
+
+template <typename T>
 poly<T>::poly() {
 	this->coeffs = std::vector<T>();
 }
@@ -131,7 +166,7 @@ poly<T>::poly(const poly<T> &other) {
 
 template <typename T>
 void poly<T>::simplify() {
-	while (this->coeffs.size() > 0 && this->coeffs[this->coeffs.size() - 1] == zero<T>(this->coeffs[this->coeffs.size() - 1]))
+	while (this->coeffs.size() > 0 && this->coeffs[this->coeffs.size() - 1] == util<T>::zero(this->coeffs[this->coeffs.size() - 1]))
 		this->coeffs.pop_back();
 }
 
@@ -143,16 +178,16 @@ int poly<T>::degree() const {
 template <typename T>
 T poly<T>::operator[](unsigned int exponent) const {
 	if (this->degree() < 0)
-		return zero<T>();
+		return util<T>::zero();
 	if (exponent > this->degree())
-		return zero<T>(this->coeffs[this->degree()]);
+		return util<T>::zero(this->coeffs[this->degree()]);
 	return this->coeffs[exponent];
 }
 
 template <typename T>
 void poly<T>::set(unsigned int exponent, T new_value) {
 	while (exponent > this->degree())
-		this->coeffs.push_back(zero<T>(this->coeffs[this->degree()]));
+		this->coeffs.push_back(util<T>::zero(this->coeffs[this->degree()]));
 	this->coeffs[exponent] = new_value;
 }
 
@@ -306,7 +341,7 @@ poly<T> poly<T>::operator*(const poly<T> &p) const {
 		return p;
 	poly<T> ret = poly<T>();
 	for (int i = 0; i <= p.degree() + this->degree(); i++)
-		ret.coeffs.push_back(zero<T>(this->coeffs[this->coeffs.size() - 1]));
+		ret.coeffs.push_back(util<T>::zero(this->coeffs[this->coeffs.size() - 1]));
 	for (int i = 0; i <= p.degree(); i++) {
 		for (int j = 0; j <= this->degree(); j++) {
 			ret.coeffs[i+j] += this->coeffs[j]*p.coeffs[i];
@@ -325,7 +360,7 @@ poly<T> &poly<T>::operator<<=(unsigned int len) {
 	if (this->coeffs.size() == 0)
 		return *this;
 	for (int i = 0; i < len; i++)
-		this->coeffs.insert(this->coeffs.begin(), zero<T>(this->coeffs[0]));
+		this->coeffs.insert(this->coeffs.begin(), util<T>::zero(this->coeffs[0]));
 	return *this;
 }
 
@@ -343,7 +378,7 @@ qr_pair<poly<T>> poly<T>::divide(const poly<T> &other) const {
 	// Algorithm 3.1.1
 
 	poly<T> r = *this, q;
-	T invlb = one<T>(other[other.degree()])/(other[other.degree()]);
+	T invlb = util<T>::one(other[other.degree()])/(other[other.degree()]);
 	while (r.degree() >= other.degree()) {
 		poly<T> s = poly<T>(r[r.degree()]*invlb);
 		s <<= r.degree()-other.degree();
@@ -399,7 +434,7 @@ qr_pair<poly<T>> poly<T>::pseudo_divide(const poly<T> &other) const {
 		e--;
 	}
 	
-	T de = one<T>(e);
+	T de = util<T>::one(e);
 	for (int i = 0; i < e; i++)
 		de *= d;
 
@@ -431,9 +466,10 @@ poly<T> &poly<T>::operator%=(const poly<T> &p) {
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const poly<T> &p) {
+	os << "(";
 	bool first = true;
 	for (int i = 0; i < p.coeffs.size(); i++) {
-		if (p.coeffs[i] == static_cast<T>(0))
+		if (p.coeffs[i] == util<T>::zero(p.coeffs[i]))
 			continue;
 		if (!first)
 			os << " + ";
@@ -446,6 +482,7 @@ std::ostream &operator<<(std::ostream &os, const poly<T> &p) {
 	}
 	if (first)
 		os << "0";
+	os << ")";
 	return os;
 }
 
@@ -473,29 +510,24 @@ poly<U> poly<T>::convert(std::function<U(T)> converter) const {
 	return poly<U>(vec);
 }
 
-template <typename T>
-poly<T> zero(const poly<T> &reference) {
-	return poly<T>();
+template <typename T, typename U>
+poly<U> global_convert(poly<T> original, std::function<U(T)> converter) {
+	return original.convert(converter);
+}
+
+template <typename T, typename U>
+std::function<poly<U>(poly<T>)> curried_convert(std::function<U(T)> converter) {
+	return std::bind(global_convert<T, U>, std::placeholders::_1, converter);
 }
 
 template <typename T>
-poly<T> one(const poly<T> &reference) {
-	return poly<T>(one<T>(reference.coeffs[reference.degree()]));
+poly<T> constant(T con) {
+	return poly<T>(con);
 }
 
 template <typename T>
-poly<T> zero() {
-	return poly<T>();
-}
-
-template <typename T>
-poly<T> one() {
-	return poly<T>(one<T>());
-}
-
-template <typename T>
-poly<T> from_int(int n, const poly<T> &reference) {
-	return poly<T>(from_int<T>(n, reference.coeffs[reference.degree()]));
+std::function<poly<T>(T)> make_constant() {
+	return std::bind(constant<T>, std::placeholders::_1);
 }
 
 template <typename T>
@@ -508,7 +540,7 @@ poly<T> poly<T>::power_mod(mpz_class power) {
 	// random undergrad who's just trying to do his thesis.
 	int numbits = mpz_sizeinbase(power.get_mpz_t(), 2);
 	std::vector<poly<T>> squares;
-	squares.push_back(poly<T>({zero<T>(this->coeffs[this->degree()]), one<T>(this->coeffs[this->degree()])}));
+	squares.push_back(poly<T>({util<T>::zero(this->coeffs[this->degree()]), util<T>::one(this->coeffs[this->degree()])}));
 	for (int i = 1; i < numbits; i++) {
 		poly<T> current = squares[squares.size() - 1];
 		current *= current;
@@ -516,7 +548,7 @@ poly<T> poly<T>::power_mod(mpz_class power) {
 		squares.push_back(current);
 	}
 	
-	poly<T> product = poly<T>(one<T>(this->coeffs[this->degree()]));
+	poly<T> product = poly<T>(util<T>::one(this->coeffs[this->degree()]));
 	for (int i = 0; i < numbits; i++) {
 		if (mpz_tstbit(power.get_mpz_t(), i)) {
 			product *= squares[i];
@@ -539,7 +571,7 @@ poly<T> poly<T>::power_mod(poly<T> start, mpz_class power) {
 		squares.push_back(current);
 	}
 	
-	poly<T> product = poly<T>(one<T>(this->coeffs[this->degree()]));
+	poly<T> product = poly<T>(util<T>::one(this->coeffs[this->degree()]));
 	for (int i = 0; i < numbits; i++) {
 		if (mpz_tstbit(power.get_mpz_t(), i)) {
 			product *= squares[i];
@@ -557,7 +589,7 @@ poly<T> poly<T>::derivative() {
 	
 	std::vector<T> coeffs;
 	for (int i = 1; i <= this->degree(); i++) {
-		coeffs.push_back(from_int<T>(i, this->coeffs[i]) * this->coeffs[i]);
+		coeffs.push_back(util<T>::from_int(i, this->coeffs[i]) * this->coeffs[i]);
 	}
 	
 	return poly<T>(coeffs);
@@ -577,9 +609,9 @@ template <typename T>
 T poly<T>::content() {
 	T g = this->coeffs[this->degree()];
 	for (int i = 0; i < this->degree(); i++) {
-		if (this->coeffs[i] == zero<T>(this->coeffs[i]))
+		if (this->coeffs[i] == util<T>::zero(this->coeffs[i]))
 			continue;
-		g = get_gcd(this->coeffs[i], g);
+		g = util<T>::get_gcd(this->coeffs[i], g);
 	}
 	
 	return g;
@@ -587,12 +619,12 @@ T poly<T>::content() {
 
 template <typename T>
 T poly<T>::norm() {
-	T s = get_abs(this->coeffs[this->degree()])*get_abs(this->coeffs[this->degree()]);
+	T s = util<T>::get_abs(this->coeffs[this->degree()])*util<T>::get_abs(this->coeffs[this->degree()]);
 	for (int i = 0; i < this->degree(); i++) {
-		s += get_abs(this->coeffs[i])*get_abs(this->coeffs[i]);
+		s += util<T>::get_abs(this->coeffs[i])*util<T>::get_abs(this->coeffs[i]);
 	}
 	
-	return get_sqrt(s);
+	return util<T>::get_sqrt(s);
 }
 
 template <typename T>
@@ -602,7 +634,7 @@ T poly<T>::leading() {
 
 template <typename T>
 poly<T> poly<T>::compose(poly<T> x) {
-	poly<T> result = zero<poly<T>>(x);
+	poly<T> result = util<poly<T>>::zero(x);
 	for (int i = 0; i <= this->degree(); i++) {
 		poly<T> term = this->coeffs[i];
 		for (int j = 0; j < i; j++)
@@ -615,7 +647,7 @@ poly<T> poly<T>::compose(poly<T> x) {
 
 template <typename T>
 T poly<T>::evaluate(T x) {
-	T result = zero<T>(x);
+	T result = util<T>::zero(x);
 	for (int i = 0; i <= this->degree(); i++) {
 		T term = this->coeffs[i];
 		for (int j = 0; j < i; j++)
@@ -624,4 +656,14 @@ T poly<T>::evaluate(T x) {
 	}
 	
 	return result;
+}
+
+template <typename T>
+poly<poly<T>> switch_variables(poly<poly<T>> orig) {
+	if (orig.degree() < 0)
+		return orig;
+	poly<T> x = util<poly<T>>::one(orig[orig.degree()]);
+	x <<= 1;
+	poly<poly<poly<T>>> mid = orig.convert(curried_convert(make_constant<T>()));
+	return mid.evaluate(poly<poly<T>>(x));
 }

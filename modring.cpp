@@ -120,3 +120,19 @@ mod make_mod(mpz_class base, mpz_class value) {
 std::function<mod(mpz_class)> to_mod(mpz_class base) {
 	return std::bind(make_mod, base, std::placeholders::_1);
 }
+
+mod util<mod>::zero() {
+	return mod(0, 0);
+}
+
+mod util<mod>::zero(const mod &reference) {
+	return mod(reference.get_base(), 0);
+}
+
+mod util<mod>::one(const mod &reference) {
+	return mod(reference.get_base(), 1);
+}
+
+mod util<mod>::from_int(int n, const mod &reference) {
+	return mod(reference.get_base(), n);
+}

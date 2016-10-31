@@ -50,19 +50,13 @@ class mod {
 std::function<mod(mpz_class)> to_mod(mpz_class base);
 
 template <>
-inline mod zero<mod>(const mod &reference) {
-	return mod(reference.get_base(), 0);
-}
-
-template <>
-inline mod one<mod>(const mod &reference) {
-	return mod(reference.get_base(), 1);
-}
-
-template <>
-inline mod from_int<mod>(int n, const mod &reference) {
-	return mod(reference.get_base(), n);
-}
+class util<mod> {
+public:
+	static mod zero();
+	static mod zero(const mod &reference);
+	static mod one(const mod &reference);
+	static mod from_int(int n, const mod &reference);
+};
 
 namespace Eigen {
 	

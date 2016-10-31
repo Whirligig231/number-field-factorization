@@ -34,7 +34,7 @@ std::vector<vec<T>> kernel(mat<T> m) {
 	for (int k = 0; k < m.cols(); k++) {
 		int j = -1;
 		for (int i = 0; i < m.rows(); i++)
-			if (m(i, k) != zero<T>(m(0, 0))*m(i, k) && ci[i] == -1)
+			if (m(i, k) != util<T>::zero(m(0, 0))*m(i, k) && ci[i] == -1)
 				j = i;
 			
 		if (j == -1) {
@@ -42,8 +42,8 @@ std::vector<vec<T>> kernel(mat<T> m) {
 			di[k] = -1;
 		}
 		else {
-			T d = -one<T>(m(j, k))/m(j, k);
-			m(j, k) = -one<T>(m(j, k));
+			T d = -util<T>::one(m(j, k))/m(j, k);
+			m(j, k) = -util<T>::one(m(j, k));
 			
 			for (int s = k+1; s < m.cols(); s++)
 				m(j, s) *= d;
@@ -53,7 +53,7 @@ std::vector<vec<T>> kernel(mat<T> m) {
 					continue;
 				
 				d = m(i, k);
-				m(i, k) = zero<T>(m(i, k));
+				m(i, k) = util<T>::zero(m(i, k));
 				
 				for (int s = k+1; s < m.cols(); s++)
 					m(i, s) += d*m(j, s);
@@ -72,9 +72,9 @@ std::vector<vec<T>> kernel(mat<T> m) {
 				if (di[i] >= 0)
 					x(i) = m(di[i], k);
 				else if (i == k)
-					x(i) = one<T>(m(0, 0));
+					x(i) = util<T>::one(m(0, 0));
 				else
-					x(i) = zero<T>(m(0, 0));
+					x(i) = util<T>::zero(m(0, 0));
 			}
 			
 			ret.push_back(x);
@@ -89,11 +89,11 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 	// Algorithm 3.2.2
 	
 	if (b.degree() < 0)
-		return std::make_tuple(poly<T>(one<T>(a[a.degree()])), poly<T>(zero<T>(a[a.degree()])), a);
+		return std::make_tuple(poly<T>(util<T>::one(a[a.degree()])), poly<T>(util<T>::zero(a[a.degree()])), a);
 	if (a.degree() < 0)
-		return std::make_tuple(poly<T>(one<T>(b[b.degree()])), poly<T>(zero<T>(b[b.degree()])), b);
+		return std::make_tuple(poly<T>(util<T>::one(b[b.degree()])), poly<T>(util<T>::zero(b[b.degree()])), b);
 
-	poly<T> u = poly<T>(one<T>(b[b.degree()]));
+	poly<T> u = poly<T>(util<T>::one(b[b.degree()]));
 	poly<T> d = a;
 	poly<T> v1 = poly<T>();
 	poly<T> v3 = b;
@@ -124,10 +124,10 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 	
 	T ac = a.content();
 	T bc = b.content();
-	T d = get_gcd(ac, bc);
+	T d = util<T>::get_gcd(ac, bc);
 	a /= ac;
 	b /= bc;
-	T g = one<T>(a[a.degree()]);
+	T g = util<T>::one(a[a.degree()]);
 	T h = g;
 	int c = 0;
 	int delta = a.degree() - b.degree();
@@ -139,7 +139,7 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 		if (r.degree() < 0)
 			break;
 		if (r.degree() == 0) {
-			b = one<T>(r[r.degree()]);
+			b = util<T>::one(r[r.degree()]);
 			break;
 		}
 		
@@ -161,7 +161,7 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 		else {
 			a /= a.content();
 			b /= b.content();
-			g = one<T>(a[a.degree()]);
+			g = util<T>::one(a[a.degree()]);
 			h = g;
 			c = 0;
 		}
@@ -175,17 +175,17 @@ T sub_resultant(poly<T> a, poly<T> b) {
 	// Algorithm 3.3.7
 	
 	if (a.degree() < 0)
-		return zero<T>(b[b.degree()]);
+		return util<T>::zero(b[b.degree()]);
 	if (b.degree() < 0)
-		return zero<T>(a[a.degree()]);
+		return util<T>::zero(a[a.degree()]);
 	
 	T a_cont = a.content();
 	T b_cont = b.content();
 	a /= a_cont;
 	b /= b_cont;
-	T g = one<T>(a[a.degree()]);
-	T h = one<T>(a[a.degree()]);
-	T s = one<T>(a[a.degree()]);
+	T g = util<T>::one(a[a.degree()]);
+	T h = util<T>::one(a[a.degree()]);
+	T s = util<T>::one(a[a.degree()]);
 	T t = get_pow(a_cont, b.degree())*get_pow(b_cont, a.degree());
 	if (a.degree() < b.degree()) {
 		poly<T> temp = a;
@@ -254,7 +254,7 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 	poly<polymod<T>> u = a / sub_resultant_gcd(a, a.derivative());
 
 	poly<poly<T>> g = static_cast<poly<poly<T>>>(u);
-	T k = zero<T>(a.leading().get_value().leading());
+	T k = util<T>::zero(a.leading().get_value().leading());
 	
 	
 }

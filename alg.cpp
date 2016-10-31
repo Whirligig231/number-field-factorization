@@ -197,7 +197,7 @@ std::vector<ZN_X> berlekamp(ZN_X a) {
 			// Note that (X, Y) = (X, Y % X), so we use power_mod.
 			ZN_X d = t;
 			d = e[i].power_mod(d, (p - 1) / 2);
-			d -= ZN_X(one<ZN>(a[a.degree()]));
+			d -= ZN_X(util<ZN>::one(a[a.degree()]));
 			d = std::get<2>(extended_gcd(e[i], d));
 			
 			if (d.degree() < 1)
@@ -267,7 +267,7 @@ Z coeff_bound(Z_X a) {
 	
 	// We add one because the square root may be rounded down; we want an upper bound
 	Z a_norm = a.norm() + 1;
-	Z a_m = get_abs(a[a.degree()]);
+	Z a_m = util<Z>::get_abs(a[a.degree()]);
 	return choose(n-1, j)*a_norm + choose(n-1, j-1)*a_m;
 }
 
@@ -445,7 +445,7 @@ std::vector<Z_X> factor(Z_X a) {
 	
 	// If |u_0| < |u_n|, reverse U and note this down for later
 	bool is_reversed = false;
-	if (get_abs(u[0]) < get_abs(u[u.degree()])) {
+	if (util<Z>::get_abs(u[0]) < util<Z>::get_abs(u[u.degree()])) {
 		is_reversed = true;
 		u = u.reverse();
 	}
