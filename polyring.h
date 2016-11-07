@@ -108,6 +108,8 @@ public:
 	static poly<T> one();
 	static poly<T> one(const poly<T> &reference);
 	static poly<T> from_int(int n, const poly<T> &reference);
+	static poly<T> get_gcd(const poly<T> &a, const poly<T> &b);
+	static poly<T> get_pow(const poly<T> &a, int exp);
 };
 
 template <typename T>
@@ -132,7 +134,15 @@ poly<T> util<poly<T>>::one() {
 
 template <typename T>
 poly<T> util<poly<T>>::from_int(int n, const poly<T> &reference) {
-	return poly<T>(util<T>::from_int(n, reference.coeffs[reference.degree()]));
+	return poly<T>(util<T>::from_int(n, reference[reference.degree()]));
+}
+
+template <typename T>
+poly<T> util<poly<T>>::get_pow(const poly<T> &a, int exp) {
+	poly<T> result = util<poly<T>>::one(a);
+	for (int i = 0; i < exp; i++)
+		result *= a;
+	return result;
 }
 
 template <typename T>
@@ -434,7 +444,7 @@ qr_pair<poly<T>> poly<T>::pseudo_divide(const poly<T> &other) const {
 		e--;
 	}
 	
-	T de = util<T>::one(e);
+	T de = util<T>::one(d);
 	for (int i = 0; i < e; i++)
 		de *= d;
 

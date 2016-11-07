@@ -49,10 +49,19 @@ int main(int argc, char *argv[]) {
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
 	// Z[Y][X]
-	poly<Z_X> orig({Z_X(), Z_X({1, 1}), Z_X({-1, 4})});
+	Q_X minimal = Q_X({2, 0, 1});
+	Q_X origa = Q_X({-45, 0, 19, 0, -2});
 	
-	std::cout << orig << std::endl;
-	std::cout << switch_variables(orig) << std::endl;
+	std::vector<polymod<Q>> alist;
+	for (int i = 0; i <= origa.degree(); i++) {
+		alist.push_back(polymod<Q>(minimal, origa[i]));
+	}
+	poly<polymod<Q>> a(alist);
+	
+	std::vector<poly<polymod<Q>>> fs = factor(a);
+	
+	for (int i = 0; i < fs.size(); i++)
+		std::cout << fs[i] << std::endl;
 
 	return 0;
 }

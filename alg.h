@@ -114,6 +114,11 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 }
 
 template <typename T>
+poly<T> util<poly<T>>::get_gcd(const poly<T> &a, const poly<T> &b) {
+	return std::get<2>(extended_gcd(a, b));
+}
+
+template <typename T>
 poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 	// Algorithm 3.3.1
 	
@@ -186,7 +191,7 @@ T sub_resultant(poly<T> a, poly<T> b) {
 	T g = util<T>::one(a[a.degree()]);
 	T h = util<T>::one(a[a.degree()]);
 	T s = util<T>::one(a[a.degree()]);
-	T t = get_pow(a_cont, b.degree())*get_pow(b_cont, a.degree());
+	T t = util<T>::get_pow(a_cont, b.degree())*util<T>::get_pow(b_cont, a.degree());
 	if (a.degree() < b.degree()) {
 		poly<T> temp = a;
 		a = b;
@@ -211,7 +216,7 @@ T sub_resultant(poly<T> a, poly<T> b) {
 			b /= h;
 		
 		g = a[a.degree()];
-		T h2 = get_pow(g, delta);
+		T h2 = util<T>::get_pow(g, delta);
 		if (delta == 0)
 			h2 *= h;
 		for (int i = 1; i < delta; i++)
@@ -219,7 +224,7 @@ T sub_resultant(poly<T> a, poly<T> b) {
 		h = h2;
 	} while (b.degree() > 0);
 	
-	T h2 = get_pow(b[b.degree()], a.degree());
+	T h2 = util<T>::get_pow(b[b.degree()], a.degree());
 	if (a.degree() == 0)
 		h2 *= h;
 	for (int i = 1; i < a.degree(); i++)
@@ -253,8 +258,52 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 
 	poly<polymod<T>> u = a / sub_resultant_gcd(a, a.derivative());
 
-	poly<poly<T>> g = static_cast<poly<poly<T>>>(u);
+	std::vector<poly<T>> gs;
+	for (int i = 0; i <= u.degree(); i++)
+		gs.push_back(u[i]);
+	poly<poly<T>> g(gs);
+	
 	T k = util<T>::zero(a.leading().get_value().leading());
 	
+	poly<T> n;
 	
+	while (true) {
+		poly<poly<T>> xky = poly<poly<T>>({poly<T>({util<T>::zero(k), -k}), poly<T>(util<T>::one(k))});
+		poly<poly<T>> gxkyy = switch_variables(g.compose(xky));
+		poly<poly<T>> ty = switch_variables(poly<poly<T>>(a.leading().get_base()));
+		n = sub_resultant(ty, gxkyy);
+		if (sub_resultant_gcd(n, n.derivative()).degree() == 0)
+			break;
+		k += util<T>::one(a.leading().get_value().leading());
+	}
+	
+	std::vector<poly<T>> ni = factor(n);
+	std::vector<poly<polymod<T>>> result;
+	
+	for (int i = 0; i < ni.size(); i++) {
+		std::vector<polymod<T>> nilist;
+		for (int j = 0; j <= ni[i].degree(); j++)
+			nilist.push_back(polymod<T>(a.leading().get_base(), ni[i]));
+		poly<polymod<T>> niconv(nilist);
+		
+		poly<polymod<T>> nixkt = niconv.compose(poly<polymod<T>>({
+				polymod<T>(a.leading(), poly<T>(k))*polymod<T>(a.leading(), poly<T>({util<T>::zero(a.leading().get_value().leading()),
+				util<T>::one(a.leading().get_value().leading())})), util<polymod<T>>::one(a.leading())
+			}));
+		poly<polymod<T>> ai = sub_resultant_gcd(u, nixkt);
+		if (ai.degree() < 1)
+			continue;
+		
+		poly<polymod<T>> a_temp = a;
+		while (true) {
+			qr_pair<poly<polymod<T>>> qr = a_temp.divide(ai);
+			if (qr.remainder.degree() >= 0)
+				break;
+			a_temp = qr.quotient;
+			result.push_back(ai / ai.leading());
+		}
+	}
+	
+	result.push_back(poly<polymod<T>>(a.leading()));
+	return result;
 }

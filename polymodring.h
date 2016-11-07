@@ -51,29 +51,49 @@ template <typename T>
 std::function<polymod<T>(poly<T>)> to_mod(poly<T> base);
 
 template <typename T>
-polymod<T> zero(const polymod<T> &reference) {
-	return polymod<T>(reference.get_base(), zero<poly<T>>());
+class util<polymod<T>> {
+public:
+	static polymod<T> zero();
+	static polymod<T> zero(const polymod<T> &reference);
+	static polymod<T> one(const polymod<T> &reference);
+	static polymod<T> from_int(int n, const polymod<T> &reference);
+	static polymod<T> get_gcd(const polymod<T> &p1, const polymod<T> &p2);
+};
+
+template <typename T>
+polymod<T> util<polymod<T>>::zero() {
+	return polymod<T>(util<poly<T>>::zero(), util<poly<T>>::zero());
 }
 
 template <typename T>
-polymod<T> one(const polymod<T> &reference) {
-	return polymod<T>(reference.get_base(), one<poly<T>>());
+polymod<T> util<polymod<T>>::zero(const polymod<T> &reference) {
+	return polymod<T>(reference.get_base(), util<poly<T>>::zero());
 }
 
 template <typename T>
-polymod<T> from_int(int n, const polymod<T> &reference) {
-	return polymod<T>(reference.get_base(), from_int<poly<T>>());
+polymod<T> util<polymod<T>>::one(const polymod<T> &reference) {
+	return polymod<T>(reference.get_base(), util<poly<T>>::one());
+}
+
+template <typename T>
+polymod<T> util<polymod<T>>::from_int(int n, const polymod<T> &reference) {
+	return polymod<T>(reference.get_base(), util<poly<T>>::from_int(n, reference.get_value()));
+}
+
+template <typename T>
+polymod<T> util<polymod<T>>::get_gcd(const polymod<T> &p1, const polymod<T> &p2) {
+	return util<polymod<T>>::one(p1);
 }
 
 template <typename T>
 polymod<T>::polymod() {
-	this->base = zero<poly<T>>();
-	this->value = zero<poly<T>>();
+	this->base = util<poly<T>>::zero();
+	this->value = util<poly<T>>::zero();
 }
 
 template <typename T>
 polymod<T>::polymod(poly<T> value) {
-	this->base = zero<poly<T>>();
+	this->base = util<poly<T>>::zero();
 	this->value = value;
 }
 
@@ -131,7 +151,7 @@ bool polymod<T>::operator!=(const polymod<T> &other) const {
 template <typename T>
 polymod<T> &polymod<T>::operator+=(const polymod<T> &other) {
 	this->value += other.value;
-	this->base = (this->base == 0) ? other.base : this->base;
+	this->base = (this->base == util<poly<T>>::zero()) ? other.base : this->base;
 	this->value = this->value.divide(this->base).remainder;
 	return *this;
 }
@@ -139,7 +159,7 @@ polymod<T> &polymod<T>::operator+=(const polymod<T> &other) {
 template <typename T>
 polymod<T> &polymod<T>::operator-=(const polymod<T> &other) {
 	this->value -= other.value;
-	this->base = (this->base == 0) ? other.base : this->base;
+	this->base = (this->base == util<poly<T>>::zero()) ? other.base : this->base;
 	this->value = this->value.divide(this->base).remainder;
 	return *this;
 }
@@ -147,7 +167,7 @@ polymod<T> &polymod<T>::operator-=(const polymod<T> &other) {
 template <typename T>
 polymod<T> &polymod<T>::operator*=(const polymod<T> &other) {
 	this->value *= other.value;
-	this->base = (this->base == 0) ? other.base : this->base;
+	this->base = (this->base == util<poly<T>>::zero()) ? other.base : this->base;
 	this->value = this->value.divide(this->base).remainder;
 	return *this;
 }
@@ -196,14 +216,4 @@ std::ostream &operator<<(std::ostream &os, const polymod<T> &m) {
 template <typename T>
 polymod<T>::operator poly<T>() {
 	return this->value;
-}
-
-template <typename T>
-polymod<T> make_polymod(poly<T> base, poly<T> value) {
-	return polymod<T>(base, value);
-}
-
-template <typename T>
-std::function<polymod<T>(poly<T>)> to_mod(poly<T> base) {
-	return std::bind(make_polymod, base, std::placeholders::_1);
 }

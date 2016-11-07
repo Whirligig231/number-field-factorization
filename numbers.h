@@ -1,3 +1,6 @@
+#include <gmp.h>
+#include <gmpxx.h>
+
 #pragma once
 
 template <typename T>
@@ -63,3 +66,16 @@ T util<T>::get_pow(T a, int exp) {
 		result /= a;
 	return result;
 }
+
+template <>
+class util<mpq_class> {
+public:
+	static mpq_class zero();
+	static mpq_class zero(const mpq_class &reference);
+	static mpq_class one();
+	static mpq_class one(const mpq_class &reference);
+	static mpq_class from_int(int n, const mpq_class &reference);
+	static mpq_class get_gcd(mpq_class a, mpq_class b);
+	static mpq_class get_abs(mpq_class a);
+	static mpq_class get_pow(mpq_class a, int exp);
+};
