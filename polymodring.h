@@ -205,7 +205,7 @@ polymod<T> polymod<T>::operator-() const {
 template <typename T>
 polymod<T> polymod<T>::inv() const {
 	std::tuple<poly<T>, poly<T>, poly<T>> gcd = extended_gcd(this->value, this->base);
-	return polymod<T>(this->base, std::get<0>(gcd));
+	return polymod<T>(this->base, std::get<0>(gcd)/std::get<2>(gcd));
 }
 
 template <typename T>

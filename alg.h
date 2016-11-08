@@ -257,6 +257,8 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 		return std::vector<poly<polymod<T>>>({a});
 
 	poly<polymod<T>> u = a / sub_resultant_gcd(a, a.derivative());
+	
+	// std::cout << "u = " << u << std::endl;
 
 	std::vector<poly<T>> gs;
 	for (int i = 0; i <= u.degree(); i++)
@@ -277,13 +279,23 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 		k += util<T>::one(a.leading().get_value().leading());
 	}
 	
+	// std::cout << "k = " << k << std::endl;
+	// std::cout << "n = " << n << std::endl;
+	
 	std::vector<poly<T>> ni = factor(n);
 	std::vector<poly<polymod<T>>> result;
+	
+	// std::cout << "= ";
+	
+	// for (int i = 0; i < ni.size(); i++)
+	// 	std::cout << ni[i];
+	
+	// std::cout << std::endl;
 	
 	for (int i = 0; i < ni.size(); i++) {
 		std::vector<polymod<T>> nilist;
 		for (int j = 0; j <= ni[i].degree(); j++)
-			nilist.push_back(polymod<T>(a.leading().get_base(), ni[i]));
+			nilist.push_back(polymod<T>(a.leading().get_base(), ni[i][j]));
 		poly<polymod<T>> niconv(nilist);
 		
 		poly<polymod<T>> nixkt = niconv.compose(poly<polymod<T>>({
@@ -291,14 +303,25 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 				util<T>::one(a.leading().get_value().leading())})), util<polymod<T>>::one(a.leading())
 			}));
 		poly<polymod<T>> ai = sub_resultant_gcd(u, nixkt);
+		
+		// std::cout << "n_i = " << niconv << std::endl;
+		// std::cout << "x + kt = " << poly<polymod<T>>({
+		// 		polymod<T>(a.leading(), poly<T>(k))*polymod<T>(a.leading(), poly<T>({util<T>::zero(a.leading().get_value().leading()),
+		// 		util<T>::one(a.leading().get_value().leading())})), util<polymod<T>>::one(a.leading())
+		// 	}) << std::endl;
+		// std::cout << "n_i(x + kt) = " << nixkt << std::endl;
+		// std::cout << "a_i = " << ai << std::endl;
+		
 		if (ai.degree() < 1)
 			continue;
 		
 		poly<polymod<T>> a_temp = a;
 		while (true) {
+			// std::cout << a_temp << std::endl;
 			qr_pair<poly<polymod<T>>> qr = a_temp.divide(ai);
 			if (qr.remainder.degree() >= 0)
 				break;
+			// std::cout << "divides!" << std::endl;
 			a_temp = qr.quotient;
 			result.push_back(ai / ai.leading());
 		}

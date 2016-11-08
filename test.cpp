@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
 	
 	// Z[Y][X]
-	Q_X minimal = Q_X({2, 0, 1});
+	Q_X minimal = Q_X({-2, 0, 1});
 	Q_X origa = Q_X({-45, 0, 19, 0, -2});
 	
 	std::vector<polymod<Q>> alist;
