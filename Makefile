@@ -1,5 +1,5 @@
-test: test.o alg.o modring.o numbers.o
-	g++ -o test test.o alg.o modring.o numbers.o -lgmp -lgmpxx -g
+test: test.o alg.o modring.o numbers.o complex.o
+	g++ -o test test.o alg.o modring.o numbers.o complex.o -lgmp -lgmpxx -g
 
 test.o: test.cpp polyring.h modring.h polymodring.h alg.h
 	g++ -c test.cpp -std=c++11 -g -isystem /usr/include/eigen3/
@@ -12,6 +12,9 @@ modring.o: modring.cpp modring.h numbers.h
 	
 numbers.o: numbers.cpp numbers.h
 	g++ -c numbers.cpp -std=c++11 -g -isystem /usr/include/eigen3/
+	
+complex.o: complex.cpp complex.h numbers.h
+	g++ -c complex.cpp -std=c++11 -g -isystem /usr/include/eigen3/
 
 ## Remove all the compilation and debugging files
 clean:

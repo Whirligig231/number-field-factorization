@@ -6,6 +6,7 @@
 
 #include "polyring.h"
 #include "modring.h"
+#include "complex.h"
 #include "polymodring.h"
 #include "alg.h"
 #include "typedefs.h"
@@ -33,35 +34,13 @@ ZN_X prand(Z p, int deg, gmp_randstate_t state) {
 }
 
 int main(int argc, char *argv[]) {
-	/*gmp_randstate_t state;
-	gmp_randinit_default(state);
-	gmp_randseed_ui(state, time(NULL));
+	mpf_set_default_prec(1000);
 	
-	int deg = atoi(argv[1]);
-	Z p = atoi(argv[2]);
-	int number = atoi(argv[3]);
+	Q_X p({12, -8, 6, -3, 0, 4, 5, -3, 7, -9, 24, 3, -127});
+	std::vector<C> roots = find_complex_roots(p, 50);
 	
-	std::clock_t start = std::clock();
-	for (int i = 0; i < number; i++) {
-		ZN_X poly = prand(p, deg, state);
-		berlekamp(poly);
-	}
-	std::cout << "Time per test: " << (std::clock() - start) * (double)1000 / (double)(CLOCKS_PER_SEC) / ((double) number) << " ms" << std::endl;*/
-	
-	// Z[Y][X]
-	Q_X minimal = Q_X({-2, 0, 1});
-	Q_X origa = Q_X({-45, 0, 19, 0, -2});
-	
-	std::vector<polymod<Q>> alist;
-	for (int i = 0; i <= origa.degree(); i++) {
-		alist.push_back(polymod<Q>(minimal, origa[i]));
-	}
-	poly<polymod<Q>> a(alist);
-	
-	std::vector<poly<polymod<Q>>> fs = factor(a);
-	
-	for (int i = 0; i < fs.size(); i++)
-		std::cout << fs[i] << std::endl;
+	for (int i = 0; i < roots.size(); i++)
+		std::cout << roots[i] << std::endl;
 
 	return 0;
 }

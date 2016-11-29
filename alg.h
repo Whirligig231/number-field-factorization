@@ -6,6 +6,7 @@
 #include "numbers.h"
 #include "polyring.h"
 #include "modring.h"
+#include "complex.h"
 #include "polymodring.h"
 #include "typedefs.h"
 
@@ -330,3 +331,5 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 	result.push_back(poly<polymod<T>>(a.leading()));
 	return result;
 }
+
+std::vector<C> find_complex_roots(Q_X p_q, int precision);

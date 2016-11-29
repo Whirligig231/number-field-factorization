@@ -637,3 +637,79 @@ std::vector<Q_X> factor(Q_X a) {
 	result[result.size() - 1] /= common_denominator;
 	return result;
 }
+
+std::vector<C> find_complex_roots(Q_X p_q, int precision) {
+	// Algorithm 3.6.6
+	
+	R prec_limit = 1;
+	for (int i = 0; i < precision; i++)
+		prec_limit /= 10;
+	
+	// Note that unlike 3.6.6, here we do not assume p to be squarefree
+	p_q = p_q / sub_resultant_gcd(p_q, p_q.derivative());
+	std::vector<C> p_coeffs;
+	for (int i = 0; i <= p_q.degree(); i++)
+		p_coeffs.push_back((C)p_q[i]);
+	
+	C_X p(p_coeffs);
+	C_X q = p;
+	C_X p_prime = p.derivative();
+	C_X q_prime = p_prime;
+	int n = p.degree();
+	
+	std::vector<C> roots;
+	
+	while (n > 0) {
+		C x(1.3, 0.314159);
+		C v = q.evaluate(x);
+		R m = v.norm();
+		
+		while (true) {
+			int c = 0;
+			C dx = v / q_prime.evaluate(x);
+			if (sqrt(dx.norm()) < prec_limit)
+				break;
+			
+			while (true) {
+				C y = x - dx;
+				C v1 = q.evaluate(y);
+				R m1 = v1.norm();
+				
+				if (m1 < m) {
+					x = y;
+					v = v1;
+					m = m1;
+					break;
+				}
+				
+				c++;
+				dx /= 4;
+				if (c >= 20) {
+					// Failure
+					std::cout << "Failure: this polynomial is nasty!" << std::endl;
+					return roots;
+				}
+			}
+		}
+		
+		x -= p.evaluate(x)/p_prime.evaluate(x);
+		x -= p.evaluate(x)/p_prime.evaluate(x);
+		
+		if (x.get_imag() < prec_limit) {
+			x = x.get_real();
+			roots.push_back(x);
+			q /= C_X({-x, 1});
+			q_prime = q.derivative();
+			n--;
+		}
+		else {
+			roots.push_back(x);
+			roots.push_back(x.conjugate());
+			q /= C_X({x.norm(), R(-2*x.get_real()), 1});
+			q_prime = q.derivative();
+			n -= 2;
+		}
+	}
+	
+	return roots;
+}
