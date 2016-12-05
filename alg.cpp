@@ -638,6 +638,31 @@ std::vector<Q_X> factor(Q_X a) {
 	return result;
 }
 
+std::vector<poly<numberfield>> factor(poly<numberfield> a) {
+	if (a.degree() < 0)
+		return std::vector<poly<numberfield>>({a});
+	
+	if (a[a.degree()].is_poly()) {
+		std::vector<polymod<numberfield>> coeffs;
+		for (int i = 0; i <= a.degree(); i++)
+			coeffs.push_back(a[i].get_poly_value());
+		std::vector<poly<polymod<numberfield>>> factors = factor(poly<polymod<numberfield>>(coeffs));
+		std::vector<poly<numberfield>> result;
+		for (int i = 0; i < factors.size(); i++)
+			result.push_back((poly<numberfield>)factors[i]);
+		return result;
+	}
+	
+	std::vector<Q> coeffs;
+	for (int i = 0; i <= a.degree(); i++)
+		coeffs.push_back(a[i].get_rational_value());
+	std::vector<poly<Q>> factors = factor(poly<Q>(coeffs));
+	std::vector<poly<numberfield>> result;
+	for (int i = 0; i < factors.size(); i++)
+		result.push_back((poly<numberfield>)factors[i]);
+	return result;
+}
+
 std::vector<C> find_complex_roots(Q_X p_q, int precision) {
 	// Algorithm 3.6.6
 	

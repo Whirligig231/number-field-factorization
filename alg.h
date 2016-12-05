@@ -4,6 +4,7 @@
 #include <utility>
 #include <tuple>
 #include "numbers.h"
+#include "numberfield.h"
 #include "polyring.h"
 #include "modring.h"
 #include "complex.h"
@@ -332,4 +333,5 @@ std::vector<poly<polymod<T>>> factor(poly<polymod<T>> a) {
 	return result;
 }
 
+std::vector<poly<numberfield>> factor(poly<numberfield> a);
 std::vector<C> find_complex_roots(Q_X p_q, int precision);

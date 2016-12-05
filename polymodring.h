@@ -72,7 +72,7 @@ polymod<T> util<polymod<T>>::zero(const polymod<T> &reference) {
 
 template <typename T>
 polymod<T> util<polymod<T>>::one(const polymod<T> &reference) {
-	return polymod<T>(reference.get_base(), util<poly<T>>::one());
+	return polymod<T>(reference.get_base(), util<poly<T>>::one(reference.get_value()));
 }
 
 template <typename T>
@@ -201,6 +201,9 @@ template <typename T>
 polymod<T> polymod<T>::operator-() const {
 	return polymod<T>(this->base, -this->value);
 }
+
+template <typename T>
+std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b);
 
 template <typename T>
 polymod<T> polymod<T>::inv() const {
