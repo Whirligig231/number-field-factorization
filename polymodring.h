@@ -208,7 +208,7 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b);
 template <typename T>
 polymod<T> polymod<T>::inv() const {
 	std::tuple<poly<T>, poly<T>, poly<T>> gcd = extended_gcd(this->value, this->base);
-	return polymod<T>(this->base, std::get<0>(gcd)/std::get<2>(gcd));
+	return polymod<T>(this->base, std::get<0>(gcd)/std::get<2>(gcd).leading());
 }
 
 template <typename T>
