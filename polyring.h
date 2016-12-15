@@ -436,11 +436,13 @@ qr_pair<poly<T>> poly<T>::pseudo_divide(const poly<T> &other) const {
 	while (r.degree() >= other.degree()) {
 		poly<T> s = poly<T>(r[r.degree()]);
 		s <<= r.degree()-other.degree();
+		poly<t> s_other = other * r[r.degree()];
+		s_other <<= r.degree()-other.degree();
 		
 		q *= d;
 		q += s;
 		r *= d;
-		r -= s*other;
+		r -= s_other;
 		e--;
 	}
 	
