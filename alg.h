@@ -93,7 +93,7 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b) {
 	if (b.degree() < 0)
 		return std::make_tuple(poly<T>(util<T>::one(a[a.degree()])), poly<T>(util<T>::zero(a[a.degree()])), a);
 	if (a.degree() < 0)
-		return std::make_tuple(poly<T>(util<T>::one(b[b.degree()])), poly<T>(util<T>::zero(b[b.degree()])), b);
+		return std::make_tuple(poly<T>(util<T>::zero(b[b.degree()])), poly<T>(util<T>::one(b[b.degree()])), b);
 
 	poly<T> u = poly<T>(util<T>::one(b[b.degree()]));
 	poly<T> d = a;
