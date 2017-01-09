@@ -642,7 +642,7 @@ std::vector<poly<numberfield>> factor(poly<numberfield> a) {
 	if (a.degree() < 0)
 		return std::vector<poly<numberfield>>({a});
 	
-	if (a[a.degree()].is_poly()) {
+	if (a[a.degree()].get_poly_levels() > 0) {
 		std::vector<polymod<numberfield>> coeffs;
 		for (int i = 0; i <= a.degree(); i++)
 			coeffs.push_back(a[i].get_poly_value());

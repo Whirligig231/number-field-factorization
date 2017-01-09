@@ -206,12 +206,14 @@ poly<T> &poly<T>::operator=(T constant) {
 	this->coeffs = std::vector<T>();
 	this->coeffs.push_back(constant);
 	this->simplify();
+	return *this;
 }
 
 template <typename T>
 poly<T> &poly<T>::operator=(std::vector<T> coeffs) {
 	this->coeffs = coeffs;
 	this->simplify();
+	return *this;
 }
 
 template <typename T>
@@ -219,11 +221,13 @@ poly<T> &poly<T>::operator=(std::initializer_list<T> coeffs) {
 	this->coeffs = std::vector<T>();
 	this->coeffs.insert(this->coeffs.end(), coeffs.begin(), coeffs.end());
 	this->simplify();
+	return *this;
 }
 
 template <typename T>
 poly<T> &poly<T>::operator=(const poly<T> &other) {
 	this->coeffs = other.coeffs;
+	return *this;
 }
 
 template <typename T>
@@ -436,7 +440,7 @@ qr_pair<poly<T>> poly<T>::pseudo_divide(const poly<T> &other) const {
 	while (r.degree() >= other.degree()) {
 		poly<T> s = poly<T>(r[r.degree()]);
 		s <<= r.degree()-other.degree();
-		poly<t> s_other = other * r[r.degree()];
+		poly<T> s_other = other * r[r.degree()];
 		s_other <<= r.degree()-other.degree();
 		
 		q *= d;
@@ -641,6 +645,8 @@ T poly<T>::norm() {
 
 template <typename T>
 T poly<T>::leading() {
+	//if (this->degree() < 0)
+	//	return util<T>::zero();
 	return this->coeffs[this->degree()];
 }
 

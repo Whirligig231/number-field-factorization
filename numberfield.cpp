@@ -1,56 +1,73 @@
 #include "numberfield.h"
 
-void numberfield_error() {
-	std::cout << "Error: crossed the levels of nesting" << std::endl;
-	int k = 1;
-	k /= (k - k);
-}
-
 numberfield::numberfield() {
-	this->is_valid = 0;
+	this->poly_levels = 0;
+	this->rational_value = std::unique_ptr<mpq_class>(new mpq_class(0));
 }
 
 numberfield::numberfield(const mpq_class &value) {
-	this->is_valid = 1;
-	this->is_poly_value = 0;
+	this->poly_levels = 0;
 	this->rational_value = std::unique_ptr<mpq_class>(new mpq_class(value));
 }
 
 numberfield::numberfield(const polymod<numberfield> &value) {
-	this->is_valid = 1;
-	this->is_poly_value = 1;
+	this->poly_levels = value.get_base().leading().poly_levels + 1;
 	this->poly_value = std::unique_ptr<polymod<numberfield>>(new polymod<numberfield>(value));
 }
 
 numberfield::numberfield(const numberfield &other) {
-	this->is_valid = other.is_valid;
-	this->is_poly_value = other.is_poly_value;
-	if (this->is_poly_value) {
+	this->poly_levels = other.poly_levels;
+	if (this->poly_levels > 0) {
 		this->poly_value = std::unique_ptr<polymod<numberfield>>(new polymod<numberfield>(*(other.poly_value)));
 	}
 	else {
-		this->rational_value = std::unique_ptr<mpq_class>(new mpq_class(*(other.rational_value)));
+		mpq_class *orv = new mpq_class(*other.rational_value);
+		this->rational_value = std::unique_ptr<mpq_class>(orv);
 	}
 }
 
+void numberfield::lift(const numberfield &other) {
+	if (other.poly_levels <= this->poly_levels)
+		return;
+	// std::cout << "my levels: " << this->poly_levels << std::endl;
+	// std::cout << "other levels: " << other.poly_levels << std::endl;
+	// std::cout << "other base: " << other.poly_value->get_base() << std::endl;
+	// std::cout << "we are not returning" << std::endl;
+	if (other.poly_levels - this->poly_levels > 1) {
+		// std::cout << "we take the inner branch" << std::endl;
+		numberfield to = other.poly_value->get_base().leading();
+		this->lift(to);
+	}
+	
+	// std::cout << "poly of this: " << poly<numberfield>({*this}) << std::endl;
+	// std::cout << "polymod: " << polymod<numberfield>(other.poly_value->get_base(), poly<numberfield>({*this})) << std::endl;
+	if (this->poly_levels == 0) {
+		// Change from rational to poly
+		this->poly_value = std::unique_ptr<polymod<numberfield>>(new polymod<numberfield>(other.poly_value->get_base(), poly<numberfield>({*this})));
+		this->rational_value = nullptr;
+	}
+	else {
+		*(this->poly_value) = polymod<numberfield>(other.poly_value->get_base(), poly<numberfield>({*this}));
+	}
+	// std::cout << "we did it" << std::endl;
+	this->poly_levels++;
+}
+
 numberfield &numberfield::operator=(const mpq_class &value) {
-	this->is_valid = 1;
-	this->is_poly_value = 0;
+	this->poly_levels = 0;
 	this->rational_value = std::unique_ptr<mpq_class>(new mpq_class(value));
 	return *this;
 }
 
 numberfield &numberfield::operator=(const polymod<numberfield> &value) {
-	this->is_valid = 1;
-	this->is_poly_value = 1;
+	this->poly_levels = value.get_base().leading().poly_levels + 1;
 	this->poly_value = std::unique_ptr<polymod<numberfield>>(new polymod<numberfield>(value));
 	return *this;
 }
 
 numberfield &numberfield::operator=(const numberfield &other) {
-	this->is_valid = other.is_valid;
-	this->is_poly_value = other.is_poly_value;
-	if (this->is_poly_value) {
+	this->poly_levels = other.poly_levels;
+	if (this->poly_levels > 0) {
 		this->poly_value = std::unique_ptr<polymod<numberfield>>(new polymod<numberfield>(*(other.poly_value)));
 	}
 	else {
@@ -59,8 +76,8 @@ numberfield &numberfield::operator=(const numberfield &other) {
 	return *this;
 }
 
-bool numberfield::is_poly() const {
-	return this->is_poly_value;
+unsigned int numberfield::get_poly_levels() const {
+	return this->poly_levels;
 }
 
 mpq_class numberfield::get_rational_value() const {
@@ -72,28 +89,16 @@ polymod<numberfield> numberfield::get_poly_value() const {
 }
 
 bool numberfield::operator==(const numberfield &other) const {
-	if (!this->is_valid) {
-		return (other == *this);
+	numberfield this2(*this);
+	numberfield other2(other);
+	this2.lift(other2);
+	other2.lift(this2);
+	if (this2.poly_levels > 0) {
+		return *(this2.poly_value) == *(other2.poly_value);
 	}
-	if (!other.is_valid) {
-		if (this->is_poly_value)
-			return (*(this->poly_value) == util<polymod<numberfield>>::zero(*(this->poly_value)));
-		else
-			return (*(this->rational_value) == util<mpq_class>::zero(*(this->rational_value)));
+	else {
+		return *(this2.rational_value) == *(other2.rational_value);
 	}
-	if (this->is_poly_value && !other.is_poly_value) {
-		numberfield_error();
-		return false;
-	}
-	if (!this->is_poly_value && other.is_poly_value) {
-		numberfield_error();
-		return false;
-	}
-	if (this->is_poly_value) {
-		return (*(this->poly_value) == *(other.poly_value));
-	}
-	
-	return (*(this->rational_value) == *(other.rational_value));
 }
 
 bool numberfield::operator!=(const numberfield &other) const {
@@ -101,85 +106,44 @@ bool numberfield::operator!=(const numberfield &other) const {
 }
 
 numberfield &numberfield::operator+=(const numberfield &other) {
-	if (!this->is_valid) {
-		*this = other;
-		return *this;
-	}
-	if (!other.is_valid) {
-		return *this;
-	}
-	if (this->is_poly_value && !other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (!this->is_poly_value && other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (this->is_poly_value) {
-		*(this->poly_value) += *(other.poly_value);
+	numberfield other2(other);
+	this->lift(other2);
+	other2.lift(*this);
+	
+	if (this->poly_levels > 0) {
+		*(this->poly_value) += *(other2.poly_value);
 		return *this;
 	}
 	
-	*(this->rational_value) += *(other.rational_value);
+	*(this->rational_value) += *(other2.rational_value);
 	return *this;
 }
 
 numberfield &numberfield::operator-=(const numberfield &other) {
-	if (!this->is_valid) {
-		*this = (-other);
-		return *this;
-	}
-	if (!other.is_valid) {
-		return *this;
-	}
-	if (this->is_poly_value && !other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (!this->is_poly_value && other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (this->is_poly_value) {
-		*(this->poly_value) -= *(other.poly_value);
+	numberfield other2(other);
+	this->lift(other2);
+	other2.lift(*this);
+	
+	if (this->poly_levels > 0) {
+		*(this->poly_value) -= *(other2.poly_value);
 		return *this;
 	}
 	
-	*(this->rational_value) -= *(other.rational_value);
+	*(this->rational_value) -= *(other2.rational_value);
 	return *this;
 }
 
 numberfield &numberfield::operator*=(const numberfield &other) {
-	if (!this->is_valid) {
-		this->is_poly_value = other.is_poly_value;
-		if (this->is_poly_value)
-			*(this->poly_value) = util<polymod<numberfield>>::zero(*(other.poly_value));
-		else
-			*(this->rational_value) = util<mpq_class>::zero(*(other.rational_value));
-		return *this;
-	}
-	if (!other.is_valid) {
-		if (this->is_poly_value)
-			*(this->poly_value) = util<polymod<numberfield>>::zero(*(this->poly_value));
-		else
-			*(this->rational_value) = util<mpq_class>::zero(*(this->rational_value));
-		return *this;
-	}
-	if (this->is_poly_value && !other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (!this->is_poly_value && other.is_poly_value) {
-		numberfield_error();
-		return *this;
-	}
-	if (this->is_poly_value) {
-		*(this->poly_value) *= *(other.poly_value);
+	numberfield other2(other);
+	this->lift(other2);
+	other2.lift(*this);
+	
+	if (this->poly_levels > 0) {
+		*(this->poly_value) *= *(other2.poly_value);
 		return *this;
 	}
 	
-	*(this->rational_value) *= *(other.rational_value);
+	*(this->rational_value) *= *(other2.rational_value);
 	return *this;
 }
 
@@ -204,9 +168,7 @@ numberfield numberfield::operator/(const numberfield &other) const {
 }
 
 numberfield numberfield::operator-() const {
-	if (!this->is_valid)
-		return numberfield(*this);
-	if (this->is_poly_value) {
+	if (this->poly_levels > 0) {
 		return numberfield(-(*(this->poly_value)));
 	}
 	
@@ -214,13 +176,7 @@ numberfield numberfield::operator-() const {
 }
 
 numberfield numberfield::inv() const {
-	if (!this->is_valid) {
-		std::cout << "Error: divide by zero in numberfield" << std::endl;
-		int a = 1;
-		a /= (a - a);
-		return numberfield(*this);
-	}
-	if (this->is_poly_value) {
+	if (this->poly_levels > 0) {
 		return numberfield((*(this->poly_value)).inv());
 	}
 	
@@ -228,10 +184,7 @@ numberfield numberfield::inv() const {
 }
 
 std::ostream &operator<<(std::ostream &os, const numberfield &m) {
-	if (!m.is_valid) {
-		return os << "0";
-	}
-	if (m.is_poly_value)
+	if (m.poly_levels > 0)
 		return os << *m.poly_value;
 	return os << *m.rational_value;
 }
@@ -241,18 +194,25 @@ numberfield util<numberfield>::zero() {
 }
 
 numberfield util<numberfield>::zero(const numberfield &reference) {
-	return numberfield() * reference;
+	// std::cout << "reference is: " << reference << std::endl;
+	// std::cout << "reference levels: " << reference.get_poly_levels() << std::endl;
+	// if (reference.get_poly_levels() > 0)
+		// std::cout << "reference base: " << reference.get_poly_value().get_base() << std::endl;
+	numberfield ret = numberfield() * reference;
+	// if (reference.get_poly_levels() > 0)
+		// std::cout << "done specifically for reference base: " << reference.get_poly_value().get_base() << std::endl;
+	return ret;
 }
 
 numberfield util<numberfield>::one(const numberfield &reference) {
-	if (reference.is_poly()) {
+	if (reference.get_poly_levels() > 0) {
 		return numberfield(util<polymod<numberfield>>::one(reference.get_poly_value()));
 	}
 	return numberfield(util<mpq_class>::one(reference.get_rational_value()));
 }
 
 numberfield util<numberfield>::from_int(int n, const numberfield &reference) {
-	if (reference.is_poly()) {
+	if (reference.get_poly_levels() > 0) {
 		return numberfield(util<polymod<numberfield>>::from_int(n, reference.get_poly_value()));
 	}
 	return numberfield(util<mpq_class>::from_int(n, reference.get_rational_value()));

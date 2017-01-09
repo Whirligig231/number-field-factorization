@@ -18,16 +18,17 @@ class numberfield {
 	private:
 		std::unique_ptr<mpq_class> rational_value;
 		std::unique_ptr<polymod<numberfield>> poly_value;
-		bool is_valid;
-		bool is_poly_value;
+		unsigned int poly_levels;
+		
+		void lift(const numberfield &other);
 		
 	public:
 		numberfield();
 		numberfield(const mpq_class &value);
 		numberfield(const polymod<numberfield> &value);
 		numberfield(const numberfield &other);
-		
-		bool is_poly() const;
+
+		unsigned int get_poly_levels() const;
 		mpq_class get_rational_value() const;
 		polymod<numberfield> get_poly_value() const;
 

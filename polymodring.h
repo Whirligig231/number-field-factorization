@@ -208,7 +208,10 @@ std::tuple<poly<T>, poly<T>, poly<T>> extended_gcd(poly<T> a, poly<T> b);
 template <typename T>
 polymod<T> polymod<T>::inv() const {
 	std::tuple<poly<T>, poly<T>, poly<T>> gcd = extended_gcd(this->value, this->base);
-	return polymod<T>(this->base, std::get<0>(gcd)/std::get<2>(gcd));
+	// If this ever trips, change line 213
+	if (std::get<2>(gcd).degree() > 0)
+		std::cout << "-----------\n-----------\n-----------\n-----------\n-----------\n-----------\nThis code doesn't work how you think\n-----------\n-----------\n-----------\n";
+	return polymod<T>(this->base, std::get<0>(gcd)/std::get<2>(gcd).leading());
 }
 
 template <typename T>
