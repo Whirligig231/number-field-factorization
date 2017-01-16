@@ -520,8 +520,11 @@ template <typename T>
 template <typename U>
 poly<U> poly<T>::convert(std::function<U(T)> converter) const {
 	std::vector<U> vec;
+	// std::cout << "sanity check, this is " << this << std::endl;
 	for (int i = 0; i < this->coeffs.size(); i++) {
-		vec.push_back(converter(this->coeffs[i]));
+		U coeff = converter(this->coeffs[i]);
+		// std::cout << "coeffs[" << i << "] = " << coeff << std::endl;
+		vec.push_back(coeff);
 	}
 	return poly<U>(vec);
 }

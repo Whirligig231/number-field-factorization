@@ -11,6 +11,7 @@
 #include "numberfield.h"
 #include "alg.h"
 #include "typedefs.h"
+#include "polyio.h"
 
 ZN_X prand(Z p, int deg, gmp_randstate_t state) {
 	std::vector<Z> coeffs;
@@ -39,7 +40,7 @@ C eval_numberfield(poly<numberfield> poly, std::vector<C> alphas, unsigned int l
 	if (level > 0) {
 		// Convert each coefficient
 		std::vector<C> coeffs;
-		for (unsigned int i = 0; i <= poly.degree(); i++) {
+		for (int i = 0; i <= poly.degree(); i++) {
 			numberfield nf = poly[i];
 			coeffs.push_back(eval_numberfield(nf.get_poly_value().get_value(), alphas, level - 1));
 		}
@@ -47,40 +48,17 @@ C eval_numberfield(poly<numberfield> poly, std::vector<C> alphas, unsigned int l
 	}
 	else {
 		std::vector<C> coeffs;
-		for (unsigned int i = 0; i <= poly.degree(); i++) {
+		for (int i = 0; i <= poly.degree(); i++) {
 			numberfield nf = poly[i];
 			coeffs.push_back(mpf_class(nf.get_rational_value()));
 		}
 		poly_C = C_X(coeffs);
 	}
-	
 	return poly_C.evaluate(alphas[level]);
 }
 
 int main(int argc, char *argv[]) {
 	mpf_set_default_prec(1000);
-	
-	
-	
-	
-	// numberfield n1(3);
-	// poly<numberfield> base({numberfield(1), numberfield(0), numberfield(1)});
-	// poly<numberfield> value({numberfield(2), numberfield(4)});
-	// polymod<numberfield> pm(base, value);
-	// numberfield n2(pm);
-	// numberfield n3 = n1 + n2;
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// return 0;
 	
 	// Precisions
 	unsigned int k1 = 10, k2 = 10;
@@ -92,12 +70,21 @@ int main(int argc, char *argv[]) {
 	std::vector<C_X> orig_polys;
 	std::vector<C> alphas;
 	
+	int BLAH = 1;
 	while (true) {
+		// std::cout << "step 1: getting polynomial" << std::endl;
 		// Get a polynomial from the user
-		Q_X current_poly({2, 0, 1});
+		std::vector<Q> cpc;
+		cpc.push_back(-2);
+		for (unsigned int i = 0; i < BLAH; i++)
+			cpc.push_back(0);
+		cpc.push_back(1);
+		Q_X current_poly(cpc);
+		BLAH++;
 		C_X orig_poly(current_poly);
 		orig_polys.push_back(orig_poly);
 		// Compute the roots
+		// std::cout << "step 2: finding roots" << std::endl;
 		std::vector<C> roots = find_complex_roots(current_poly, k1);
 		// Display the roots
 		for (unsigned int i = 0; i < roots.size(); i++)
@@ -105,6 +92,7 @@ int main(int argc, char *argv[]) {
 		// Pick a root
 		unsigned int chosen_i = 0;
 		alphas.push_back(roots[chosen_i]);
+		// std::cout << "step 3: converting polynomial to extended field" << std::endl;
 		// Convert the polynomial in terms of the previous polynomials
 		poly<numberfield> current_poly_conv = current_poly;
 		for (unsigned int i = 0; i < min_polys.size(); i++) {
@@ -116,6 +104,7 @@ int main(int argc, char *argv[]) {
 			}
 			current_poly_conv = poly<numberfield>(coeffs);
 		}
+		// std::cout << "step 4: factoring the polynomial" << std::endl;
 		// Factor the current polynomial to find the minimal polynomial
 		std::vector<poly<numberfield>> factored = factor(current_poly_conv);
 		
@@ -125,12 +114,14 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			while (true) {
+				// std::cout << "step 5: evaluating each factor" << std::endl;
 				// Evaluate each factor
 				std::vector<C> values;
 				for (unsigned int i = 0; i < factored.size(); i++) {
 					values.push_back(eval_numberfield(factored[i], alphas, alphas.size() - 1));
 				}
 				
+				// std::cout << "step 6: testing for the right factor" << std::endl;
 				R min_nm = -1, max_nm = -1;
 				unsigned int min_i = 0;
 				for (unsigned int i = 0; i < values.size(); i++) {
@@ -149,6 +140,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 				else {
+					// std::cout << "step 7: running Newton's method" << std::endl;
 					// Increase precision and re-run
 					for (unsigned int i = 0; i < alphas.size(); i++) {
 						// Newton's method
@@ -156,7 +148,10 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
-			std::cout << min_polys[min_polys.size() - 1] << std::endl;
+			// std::cout << "step 8: printing output" << std::endl;
+			// std::cout << min_polys[min_polys.size() - 1] << std::endl;
+			print_polyterm_list(&std::cout, get_polyterm_list(min_polys[min_polys.size() - 1]));
+			std::cout << std::endl;
 		}
 		
 		// break;

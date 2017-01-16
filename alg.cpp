@@ -409,7 +409,6 @@ std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c) {
 
 std::vector<Z_X> factor(Z_X a) {
 	// Algorithm 3.5.7
-	
 	if (a.degree() < 0)
 		return std::vector<Z_X>({a});
 
@@ -419,7 +418,7 @@ std::vector<Z_X> factor(Z_X a) {
 	u = u.ring_exact_divide(sub_resultant_gcd(a, a.derivative())).quotient;
 	if (u[u.degree()] < 0)
 		u = -u;
-	
+
 	// Cast out any factors of x
 	int factors_of_x = 0;
 	if (u[0] == 0) {
@@ -430,7 +429,7 @@ std::vector<Z_X> factor(Z_X a) {
 			factors_of_x++;
 		}
 	}
-	
+
 	// Check if u is constant
 	if (u.degree() < 1) {
 		std::vector<Z_X> result;
@@ -442,15 +441,13 @@ std::vector<Z_X> factor(Z_X a) {
 		
 		return result;
 	}
-	
+
 	// If |u_0| < |u_n|, reverse U and note this down for later
 	bool is_reversed = false;
 	if (util<Z>::get_abs(u[0]) < util<Z>::get_abs(u[u.degree()])) {
 		is_reversed = true;
 		u = u.reverse();
 	}
-	
-	// std::cout << "u = " << u << std::endl;
 
 	Z p = 1;
 	do
@@ -458,7 +455,7 @@ std::vector<Z_X> factor(Z_X a) {
 	while (u[u.degree()] % p == 0 || std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
 
 	std::vector<ZN_X> u_factors = berlekamp_auto(u.convert(to_mod(p)));
-	
+
 	Z bound = coeff_bound(u);
 	int exp = log_bound(p, 2*u[u.degree()]*bound);
 	
@@ -467,7 +464,6 @@ std::vector<Z_X> factor(Z_X a) {
 		pexp *= p;
 	
 	// std::cout << "p^e = " << p << "^" << exp << " = " << pexp << std::endl;
-	
 	std::vector<Z_X> ui;
 	for (int i = 0; i < u_factors.size(); i++)
 		ui.push_back(static_cast<Z_X>(u_factors[i]));
@@ -478,11 +474,10 @@ std::vector<Z_X> factor(Z_X a) {
 		ZN_X ui_n = ui[i].convert(to_mod(pexp));
 		ui_n /= ui_n[ui_n.degree()];
 		ui[i] = static_cast<Z_X>(ui_n);
-		// std::cout << "u" << i << " = " << ui[i] << std::endl;
 	}
 	
 	std::vector<Z_X> result;
-	
+
 	int d = 1;
 	while (2*d <= ui.size()) {
 		
@@ -498,13 +493,11 @@ std::vector<Z_X> factor(Z_X a) {
 			// We want to include ui[0] if d = 1/2 r
 			if (2*d == ui.size() && combination[0] > 0)
 				break;
-			
+
 			Z_X v_bar(1);
 			for (int i = 0; i < d; i++)
 				v_bar *= ui[combination[i]];
 			
-			// std::cout << "v_bar = " << v_bar << std::endl;
-
 			Z_X v;
 			
 			if (v_bar.degree()*2 <= u.degree()) {
@@ -513,7 +506,7 @@ std::vector<Z_X> factor(Z_X a) {
 			else {
 				v = static_cast<Z_X>(u.convert(to_mod(pexp)) / v_bar.convert(to_mod(pexp)));
 			}
-			
+						
 			// The coefficients will be in [0, p^e - 1];
 			// let's fix this!
 			for (int i = 0; i <= v.degree(); i++)
@@ -524,7 +517,7 @@ std::vector<Z_X> factor(Z_X a) {
 			
 			// Cohen recommends checking for divisibility of the constant terms first.
 			if (u[u.degree()]*u[0] % v[0] == 0) {
-
+				
 				qr_pair<Z_X> test_qr = (u*u[u.degree()]).pseudo_divide(v);
 				Z modbase = 1;
 				for (int i = 0; i < u.degree() - v.degree() + 1; i++)
@@ -582,11 +575,12 @@ std::vector<Z_X> factor(Z_X a) {
 				if (start_point < 0)
 					break;
 				combination[start_point]++;
-				for (int i = start_point + 1; i < ui.size(); i++)
+				for (int i = start_point + 1; i < combination.size(); i++)
 					combination[i] = combination[i-1] + 1;
 			}
 			if (start_point < 0)
 				break;
+			
 		}
 		
 		if (terminate_early)
