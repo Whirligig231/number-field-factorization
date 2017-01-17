@@ -1,35 +1,64 @@
 #include "polyio.h"
 
+polyterm::polyterm() {
+	this->coeff = 0;
+}
+
+polyterm::polyterm(std::string in) {
+	unsigned int end_of_num;
+	for (end_of_num = 0; end_of_num < in.size(); end_of_num++) {
+		if (in[end_of_num] >= 'a')
+			break;
+	}
+	std::string coeff_str = in.substr(0, end_of_num);
+	if (coeff_str.size() == 0)
+		this->coeff = 1;
+	else if (coeff_str.size() == 1 && coeff_str[0] == '+')
+		this->coeff = 1;
+	else if (coeff_str.size() == 1 && coeff_str[0] == '-')
+		this->coeff = -1;
+	else if (coeff_str[0] == '+')
+		this->coeff = Q(coeff_str.substr(1));
+	else
+		this->coeff = Q(coeff_str);
+	
+	unsigned int f_start = end_of_num, f_end = f_start;
+	while (f_end < in.size()) {
+		f_start = f_end;
+		for (f_end++; f_end < in.size(); f_end++)
+			if (in[f_end] >= 'a')
+				break;
+
+		unsigned int powind = (unsigned int)(in[f_start] - 'a');
+		if (powind >= this->powers.size())
+			this->powers.resize(powind + 1, 0);
+		
+		if (f_start + 1 == f_end) {
+			this->powers[powind] += 1;
+		}
+		else {
+			unsigned int k;
+			std::stringstream(in.substr(f_start + 2, f_end - f_start - 2)) >> k;
+			this->powers[powind] += k;
+		}
+	}
+}
+
 bool polyterm::operator<(const polyterm &other) const {
 	unsigned int sum1 = 0, sum2 = 0;
-	for (unsigned int i = 0; i < this->powers.size(); i++)
-		sum1 += this->powers[i];
-	for (unsigned int i = 0; i < other.powers.size(); i++)
-		sum2 += other.powers[i];
-	
-	if (sum1 > sum2)
-		return 1;
-	if (sum1 < sum2)
-		return 0;
-	
-	for (unsigned int i = std::max(this->powers.size(), other.powers.size()) - 1; i >= 0; i--) {
-		unsigned int p1, p2;
-		if (i > this->powers.size())
-			p1 = 0;
-		else
+	for (unsigned int i = std::max(this->powers.size(), other.powers.size()) - 1; i < (1 << 31); i--) {
+		unsigned int p1 = 0, p2 = 0;
+		if (i < this->powers.size())
 			p1 = this->powers[i];
-		
-		if (i > other.powers.size())
-			p2 = 0;
-		else
+		if (i < other.powers.size())
 			p2 = other.powers[i];
 		
 		if (p1 > p2)
 			return 1;
-		if (p2 < p1)
+		if (p1 < p2)
 			return 0;
 	}
-	
+
 	return this->coeff > other.coeff;
 }
 
@@ -68,12 +97,33 @@ void polyterm::print_added(std::ostream *out) {
 			has_power = 1;
 	if ((this->coeff != 1 && this->coeff != -1) || !has_power)
 		*out << ' ' << abs(this->coeff);
+	bool first_power = 1;
 	for (unsigned int i = 0; i < this->powers.size(); i++) {
 		if (this->powers[i] == 0)
 			continue;
-		*out << ' ' << (char)('a' + i);
+		if (!first_power || this->coeff == 1 || this->coeff == -1)
+			*out << ' ';
+		first_power = 0;
+		*out << (char)('a' + i);
 		if (this->powers[i] > 1)
 			*out << '^' << this->powers[i];
+	}
+}
+
+std::vector<polyterm> scan_polyterm_list(std::string input) {
+	// Remove spaces
+	input.erase(std::remove_if(input.begin(), input.end(), [](char x){return std::isspace(x);}), input.end());
+	
+	unsigned int start_of_term = 0, end_of_term = 0;
+	std::vector<polyterm> ret;
+	while (true) {
+		start_of_term = end_of_term;
+		end_of_term++;
+		while (end_of_term < input.size() && input[end_of_term] != '+' && input[end_of_term] != '-')
+			end_of_term++;
+		ret.push_back(polyterm(input.substr(start_of_term, end_of_term - start_of_term)));
+		if (end_of_term >= input.size())
+			return ret;
 	}
 }
 
