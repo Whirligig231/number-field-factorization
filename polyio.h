@@ -30,3 +30,6 @@ std::vector<polyterm> scan_polyterm_list(std::string input);
 void print_polyterm_list(std::ostream *out, std::vector<polyterm> list);
 std::vector<polyterm> standardize(std::vector<polyterm> terms);
 std::vector<polyterm> get_polyterm_list(poly<numberfield> input);
+
+poly<Q> get_rational_poly(std::vector<polyterm> terms);
+poly<numberfield> get_numberfield_poly(std::vector<polyterm> terms, std::vector<poly<numberfield>> min_polys, int level = -1);

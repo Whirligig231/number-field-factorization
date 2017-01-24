@@ -197,3 +197,62 @@ std::vector<polyterm> get_polyterm_list(poly<numberfield> input) {
 	
 	return standardize(terms);
 }
+
+poly<Q> get_rational_poly(std::vector<polyterm> terms) {
+	std::vector<Q> coeffs;
+	for (unsigned int i = 0; i < terms.size(); i++) {
+		unsigned int powind = 0;
+		for (unsigned int j = 0; j < terms[i].powers.size(); j++)
+			powind += terms[i].powers[j];
+		if (powind >= coeffs.size())
+			coeffs.resize(powind + 1, 0);
+		coeffs[powind] += terms[i].coeff;
+	}
+	return poly<Q>(coeffs);
+}
+
+poly<numberfield> get_numberfield_poly(std::vector<polyterm> terms, std::vector<poly<numberfield>> min_polys, int level) {
+	if (level < 0)
+		level = min_polys.size();
+	if (level == 0) {
+		// Polynomial over Q
+		return poly<numberfield>(get_rational_poly(terms));
+	}
+
+	// Find max exponent of highest variable
+	unsigned int max_exp = 0;
+	for (unsigned int i = 0; i < terms.size(); i++) {
+		unsigned int this_exp = 0;
+		if (level < terms[i].powers.size())
+			this_exp = terms[i].powers[level];
+		if (this_exp > max_exp)
+			max_exp = this_exp;
+	}
+	
+	// Sort into bins for the various exponents
+	std::vector<std::vector<polyterm>> bins;
+	for (unsigned int i = 0; i <= max_exp; i++)
+		bins.push_back(std::vector<polyterm>());
+	
+	for (unsigned int i = 0; i < terms.size(); i++) {
+		unsigned int this_exp = 0;
+		if (level < terms[i].powers.size())
+			this_exp = terms[i].powers[level];
+		if (level < terms[i].powers.size())
+			terms[i].powers[level] = 0;
+		bins[this_exp].push_back(terms[i]);
+	}
+
+	// Convert each bin using recursive call
+	std::vector<poly<numberfield>> bin_results;
+	for (unsigned int i = 0; i <= max_exp; i++)
+		bin_results.push_back(get_numberfield_poly(bins[i], min_polys, level - 1));
+
+	// Add min polynomials to make numberfield coefficients
+	std::vector<numberfield> coeffs;
+	for (unsigned int i = 0; i <= max_exp; i++)
+		coeffs.push_back(numberfield(polymod<numberfield>(min_polys[level - 1], bin_results[i])));
+
+	// Combine into one polynomial
+	return poly<numberfield>(coeffs);
+}

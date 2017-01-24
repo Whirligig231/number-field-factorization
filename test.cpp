@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
 #include <ctime>
@@ -59,7 +60,7 @@ C eval_numberfield(poly<numberfield> poly, std::vector<C> alphas, unsigned int l
 
 int main(int argc, char *argv[]) {
 	mpf_set_default_prec(1000);
-	
+
 	// Precisions
 	unsigned int k1 = 10, k2 = 10;
 	R k2_real = 1;
@@ -70,17 +71,18 @@ int main(int argc, char *argv[]) {
 	std::vector<C_X> orig_polys;
 	std::vector<C> alphas;
 	
-	int BLAH = 1;
+	std::string field_str = "Q";
+	
 	while (true) {
+		char alpha_char = (char)('a' + alphas.size());
 		// std::cout << "step 1: getting polynomial" << std::endl;
 		// Get a polynomial from the user
-		std::vector<Q> cpc;
-		cpc.push_back(-2);
-		for (unsigned int i = 0; i < BLAH; i++)
-			cpc.push_back(0);
-		cpc.push_back(1);
-		Q_X current_poly(cpc);
-		BLAH++;
+		std::cout << "Enter a rational polynomial in " << alpha_char << ", or nothing to stop adjoining roots:" << std::endl;
+		std::string input;
+		std::getline(std::cin, input);
+		if (input.size() == 0)
+			break;
+		Q_X current_poly = get_rational_poly(standardize(scan_polyterm_list(input)));
 		C_X orig_poly(current_poly);
 		orig_polys.push_back(orig_poly);
 		// Compute the roots
@@ -88,11 +90,22 @@ int main(int argc, char *argv[]) {
 		std::vector<C> roots = find_complex_roots(current_poly, k1);
 		// Display the roots
 		for (unsigned int i = 0; i < roots.size(); i++)
-			std::cout << roots[i] << std::endl;
+			std::cout << "Root " << (i + 1) << " ~= " << roots[i] << std::endl;
 		// Pick a root
-		unsigned int chosen_i = 0;
+		unsigned int chosen_i = -1;
+		std::cout << "Which root is the value of " << alpha_char << "?" << std::endl;
+		do {
+			std::getline(std::cin, input);
+			std::stringstream(input) >> chosen_i;
+			if (chosen_i <= 0 || chosen_i > roots.size()) {
+				chosen_i = -1;
+				std::cout << "Please enter a valid value from 1 to " << roots.size() << "." << std::endl;
+			}
+			else
+				chosen_i--;
+		} while (chosen_i < 0);
 		alphas.push_back(roots[chosen_i]);
-		// std::cout << "step 3: converting polynomial to extended field" << std::endl;
+		std::cout << "Converting to a polynomial in " << field_str << " ... " << std::endl;
 		// Convert the polynomial in terms of the previous polynomials
 		poly<numberfield> current_poly_conv = current_poly;
 		for (unsigned int i = 0; i < min_polys.size(); i++) {
@@ -104,7 +117,7 @@ int main(int argc, char *argv[]) {
 			}
 			current_poly_conv = poly<numberfield>(coeffs);
 		}
-		// std::cout << "step 4: factoring the polynomial" << std::endl;
+		std::cout << "Factoring in " << field_str << " ... " << std::endl;
 		// Factor the current polynomial to find the minimal polynomial
 		std::vector<poly<numberfield>> factored = factor(current_poly_conv);
 		
@@ -114,14 +127,14 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			while (true) {
-				// std::cout << "step 5: evaluating each factor" << std::endl;
+				std::cout << "Evaluating each factor in C ... " << std::endl;
 				// Evaluate each factor
 				std::vector<C> values;
 				for (unsigned int i = 0; i < factored.size(); i++) {
 					values.push_back(eval_numberfield(factored[i], alphas, alphas.size() - 1));
 				}
 				
-				// std::cout << "step 6: testing for the right factor" << std::endl;
+				std::cout << "Comparing factor values ... " << std::endl;
 				R min_nm = -1, max_nm = -1;
 				unsigned int min_i = 0;
 				for (unsigned int i = 0; i < values.size(); i++) {
@@ -140,7 +153,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 				else {
-					// std::cout << "step 7: running Newton's method" << std::endl;
+					std::cout << "Refining the roots ... " << std::endl;
 					// Increase precision and re-run
 					for (unsigned int i = 0; i < alphas.size(); i++) {
 						// Newton's method
@@ -150,12 +163,35 @@ int main(int argc, char *argv[]) {
 			}
 			// std::cout << "step 8: printing output" << std::endl;
 			// std::cout << min_polys[min_polys.size() - 1] << std::endl;
-			print_polyterm_list(&std::cout, get_polyterm_list(min_polys[min_polys.size() - 1]));
-			std::cout << std::endl;
 		}
 		
-		// break;
+		std::cout << "The minimal polynomial of " << alpha_char << " over " << field_str << " is ";
+		print_polyterm_list(&std::cout, get_polyterm_list(min_polys[min_polys.size() - 1]));
+		std::cout << "." << std::endl;
+		
+		std::stringstream o;
+		o << "[";
+		o << alpha_char;
+		o << "]";
+		field_str += o.str();
 	}
 
+	char alpha_char = (char)('a' + alphas.size());
+	std::cout << "Enter a polynomial in " << alpha_char << " and all previous roots:" << std::endl;
+	std::string input;
+	std::getline(std::cin, input);
+	poly<numberfield> poly_to_factor = get_numberfield_poly(standardize(scan_polyterm_list(input)), min_polys);
+	std::cout << "Factoring ... " << std::endl;
+	// Factor the current polynomial to find the minimal polynomial
+	std::vector<poly<numberfield>> factored = factor(poly_to_factor);
+	print_polyterm_list(&std::cout, get_polyterm_list(poly_to_factor));
+	std::cout << " = ";
+	for (unsigned int i = 0; i < factored.size(); i++) {
+		std::cout << '(';
+		print_polyterm_list(&std::cout, get_polyterm_list(factored[i]));
+		std::cout << ')';
+	}
+	std::cout << std::endl;
+	
 	return 0;
 }
