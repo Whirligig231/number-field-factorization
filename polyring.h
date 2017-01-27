@@ -199,6 +199,7 @@ void poly<T>::set(unsigned int exponent, T new_value) {
 	while (exponent > this->degree())
 		this->coeffs.push_back(util<T>::zero(this->coeffs[this->degree()]));
 	this->coeffs[exponent] = new_value;
+	this->simplify();
 }
 
 template <typename T>
@@ -361,6 +362,7 @@ poly<T> poly<T>::operator*(const poly<T> &p) const {
 			ret.coeffs[i+j] += this->coeffs[j]*p.coeffs[i];
 		}
 	}
+	ret.simplify();
 	return ret;
 }
 

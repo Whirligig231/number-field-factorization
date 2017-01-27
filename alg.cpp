@@ -226,7 +226,7 @@ std::vector<ZN_X> berlekamp(ZN_X a) {
 		leading_product *= e[i][e[i].degree()];
 	ZN deviation = a[a.degree()] / leading_product;
 	e[0] *= deviation;
-	
+
 	return e;
 }
 
@@ -379,14 +379,14 @@ std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c) {
 	// Lift this factorization to a factorization f'*ai_new[0] mod p^exp.
 	// Note that f' = f mod p, so f' satisfies the same condition as f on the
 	// remaining factors. We repeat the process.
-	
+
 	std::vector<Z_X> fi;
 	Z_X current_tail(1);
 	for (int i = 1; i < ai.size(); i++) {
 		current_tail *= ai[ai.size() - i];
 		fi.insert(fi.begin(), current_tail);
 	}
-	
+
 	Z_X sub_product = c;
 	for (int i = 0; i < ai.size() - 1; i++) {
 		// Now sub_product = ai[i]*fi[i] mod p.
@@ -401,7 +401,7 @@ std::vector<Z_X> poly_hensel_lift(Z p, int exp, std::vector<Z_X> ai, Z_X c) {
 		// Note that it's still congruent to the old fi[i] mod p.
 		sub_product = hensel.second;
 	}
-	
+
 	// Push the final sub_product, as it will only have one factor in it.
 	ai_new.push_back(sub_product);
 	return ai_new;
@@ -450,32 +450,33 @@ std::vector<Z_X> factor(Z_X a) {
 	}
 
 	Z p = 1;
-	do
+	do {
 		mpz_nextprime(p.get_mpz_t(), p.get_mpz_t());
+	}
 	while (u[u.degree()] % p == 0 || std::get<2>(extended_gcd(u.convert(to_mod(p)), u.derivative().convert(to_mod(p)))).degree() != 0);
 
 	std::vector<ZN_X> u_factors = berlekamp_auto(u.convert(to_mod(p)));
 
 	Z bound = coeff_bound(u);
 	int exp = log_bound(p, 2*u[u.degree()]*bound);
-	
+
 	Z pexp = 1;
 	for (int i = 0; i < exp; i++)
 		pexp *= p;
-	
+
 	// std::cout << "p^e = " << p << "^" << exp << " = " << pexp << std::endl;
 	std::vector<Z_X> ui;
 	for (int i = 0; i < u_factors.size(); i++)
 		ui.push_back(static_cast<Z_X>(u_factors[i]));
 	ui = poly_hensel_lift(p, exp, ui, u);
-	
+
 	// Convert to monic (poly_hensel_lift doesn't do this)
 	for (int i = 0; i < ui.size(); i++) {
 		ZN_X ui_n = ui[i].convert(to_mod(pexp));
 		ui_n /= ui_n[ui_n.degree()];
 		ui[i] = static_cast<Z_X>(ui_n);
 	}
-	
+
 	std::vector<Z_X> result;
 
 	int d = 1;
@@ -514,7 +515,7 @@ std::vector<Z_X> factor(Z_X a) {
 					v.set(i, v[i] - pexp);
 				
 			// std::cout << "v = " << v << std::endl;
-			
+
 			// Cohen recommends checking for divisibility of the constant terms first.
 			if (u[u.degree()]*u[0] % v[0] == 0) {
 				
@@ -610,7 +611,7 @@ std::vector<Z_X> factor(Z_X a) {
 	
 	for (int i = 0; i < factors_of_x; i++)
 		result.insert(result.begin(), Z_X({0, 1}));
-	
+
 	return result;
 }
 

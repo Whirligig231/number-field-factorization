@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 		for (unsigned int i = 0; i < roots.size(); i++)
 			std::cout << "Root " << (i + 1) << " ~= " << roots[i] << std::endl;
 		// Pick a root
-		unsigned int chosen_i = -1;
+		int chosen_i = -1;
 		std::cout << "Which root is the value of " << alpha_char << "?" << std::endl;
 		do {
 			std::getline(std::cin, input);
