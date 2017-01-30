@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
@@ -58,11 +59,56 @@ C eval_numberfield(poly<numberfield> poly, std::vector<C> alphas, unsigned int l
 	return poly_C.evaluate(alphas[level]);
 }
 
+struct option {
+	bool valid;
+	std::string name;
+	unsigned int value;
+};
+
+option parse_option(std::string opt) {
+	option ret;
+	ret.valid = false;
+	if (opt[0] != '-')
+		return ret;
+	unsigned int equ = opt.find("=");
+	if (equ == std::string::npos)
+		return ret;
+	ret.name = opt.substr(1, equ - 1);
+	std::stringstream ss(opt.substr(equ + 1, opt.length() - equ - 1));
+	ss >> ret.value;
+	if (ss.fail())
+		return ret;
+	ret.valid = true;
+	return ret;
+}
+
 int main(int argc, char *argv[]) {
 	mpf_set_default_prec(1000);
-
+	
 	// Precisions
 	unsigned int k1 = 10, k2 = 10;
+	
+	for (unsigned int i = 1; i < argc; i++) {
+		std::string this_arg(argv[i]);
+		if (this_arg.length() == 0)
+			continue;
+		option opt = parse_option(this_arg);
+		if (!opt.valid) {
+			std::cout << "Unknown command line option " << this_arg << std::endl;
+		}
+		else if (opt.name == "k1") {
+			std::cout << "Setting k1 to " << opt.value << std::endl;
+			k1 = opt.value;
+		}
+		else if (opt.name == "k2") {
+			std::cout << "Setting k2 to " << opt.value << std::endl;
+			k2 = opt.value;
+		}
+		else {
+			std::cout << "Unknown command line argument " << opt.name << std::endl;
+		}
+	}
+	
 	R k2_real = 1;
 	for (int i = 0; i < k2; i++)
 		k2_real *= 10;
