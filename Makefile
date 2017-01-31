@@ -1,8 +1,8 @@
-test: test.o alg.o modring.o numbers.o complex.o numberfield.o polyio.o
-	g++ -o test test.o alg.o modring.o numbers.o complex.o numberfield.o polyio.o -lgmp -lgmpxx -g -pg
+factor: factor.o alg.o modring.o numbers.o complex.o numberfield.o polyio.o
+	g++ -o factor factor.o alg.o modring.o numbers.o complex.o numberfield.o polyio.o -lgmp -lgmpxx -g -pg
 
-test.o: test.cpp polyring.h modring.h polymodring.h alg.h numberfield.h polyio.h
-	g++ -c test.cpp -std=c++11 -g -isystem /usr/include/eigen3/ -pg
+factor.o: factor.cpp polyring.h modring.h polymodring.h alg.h numberfield.h polyio.h
+	g++ -c factor.cpp -std=c++11 -g -isystem /usr/include/eigen3/ -pg
 	
 alg.o: alg.cpp alg.h polyring.h modring.h polymodring.h typedefs.h numbers.h numberfield.h
 	g++ -c alg.cpp -std=c++11 -g -isystem /usr/include/eigen3/ -pg
@@ -24,4 +24,4 @@ polyio.o: polyio.cpp polyring.h modring.h polymodring.h alg.h numberfield.h poly
 
 ## Remove all the compilation and debugging files
 clean:
-	rm -f core test *.o *~
+	rm -f core factor *.o *~
