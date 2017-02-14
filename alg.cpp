@@ -1,10 +1,40 @@
+#include <vector>
+
 #include "alg.h"
+
+std::vector<std::vector<Z>> ncr; // Memoized values of choose()
+
+Z get_memoized_ncr(int n, int r) {
+	if (n < 0 || r < 0)
+		return 0;
+	if (n >= ncr.size())
+		return 0;
+	std::vector<Z> *row = &ncr[n];
+	if (r >= row->size())
+		return 0;
+	return (*row)[r];
+}
+
+void set_memoized_ncr(int n, int r, Z val) {
+	while (n >= ncr.size())
+		ncr.push_back(std::vector<Z>());
+	std::vector<Z> *row = &ncr[n];
+	while (r >= row->size())
+		row->push_back(0);
+	(*row)[r] = val;
+}
 
 Z choose(int n, int r) {
 	if (r <= 0 || r >= n)
 		return 1;
 	
-	return choose(n - 1, r) + choose(n - 1, r - 1);
+	Z memo = get_memoized_ncr(n, r);
+	if (memo != 0)
+		return memo;
+	
+	memo = choose(n - 1, r) + choose(n - 1, r - 1);
+	set_memoized_ncr(n, r, memo);
+	return memo;
 }
 
 int log_bound(Z base, Z pow) {

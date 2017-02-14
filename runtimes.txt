@@ -1,0 +1,126 @@
+d is the degree
+k is the product of lower degrees
+n is dimension
+
+Polynomial/numberfield addition/subtraction: [d]k
+Multiplication/division: [d^2]k^2
+GCD: d^2k^2
+
+Choose: r(n-r) thanks to memoization
+
+Log bound:
+	Let k = log log pow - log log base
+	log log pow - log log base array pushes
+	binary search over a set of size log pow / log base: k times:
+		k multiplications
+
+Conclusion: (log log pow - log log base)^2
+(Note: actual runtime is slower than this due to copying?)
+
+Power mod:
+	Let d = this degree, p = the power (you cringe, but it actually ends up being prime)
+	log p times:
+		1 poly multiplication: (deg of current)^2k^2
+		1 poly divide: (deg of current)^2k^2
+	log p times:
+		1 poly multiplication: (deg of current)^2k^2
+		1 poly divide: (deg of current)^2k^2
+	deg of current is bounded by d
+
+Conclusion: d^2 k^2 log p
+
+2.3.1, Matrix kernel: n^2(r+1) (r = rank)
+
+3.3.1, Sub-Resultant GCD:
+	d GCDs of elements: dk^2
+	At most d-delta times:
+		1 pseudo divide: dk^2 due to telescoping in degree differences
+		delta multiplications in T: delta k^2
+		1 scalar divide: dk^2
+		Nine out of ten times:
+			delta mult/divs in T: delta k^2
+		Else:
+			d GCDs of elements: dk^2
+			1 scalar divide: dk^2
+	d GCDs of elements: dk^2
+	1 scalar multiplication: dk^2
+
+Conclusion: d^2k^2
+
+3.3.7, Sub-Resultant:
+	d GCDs of elements: dk^2
+	d multiplications in T: dk^2
+	At most d-delta times:
+		1 pseudo divide: dk^2 due to telescoping in degree differences
+		delta multiplications in T: delta k^2
+		1 scalar divide: dk^2
+		delta multiplications in T: delta k^2
+	d multiplications in T: dk^2
+
+Conclusion: d^2k^2
+
+3.4.10, Berlekamp Small p:
+	For now, d^3 + d^2f^2p (f = number of factors)
+	Some more careful analysis may be necessary
+	
+3.4.11, Berlekamp:
+	1 power mod: d^2 log p
+	d times:
+		1 poly *: d^2
+		1 poly %: d^2
+	1 mat kernel: d^2(d-f+1)
+	Until fully factored: (note probability 4/9 for each iteration)
+		f times:
+			1 scalar *: d
+			1 poly +: d
+		|E| times: (triangle behavior in number of factors)
+			1 power mod: d^2 log p (d = degree of factor here!)
+			1 poly GCD: d^2
+	f times:
+		1 field *: 1
+	(lesser operations)
+
+Conclusion: d^3 + d^2f^2 log p
+
+3.5.1, Coeff Bound:
+	1 norm: d
+	1 choose: r(n-r) ~= (d/4)(d/4) = d^2
+
+Conclusion: d^2
+
+3.5.5, Hensel Lift:
+	1 integer GCD: 1
+	1 poly *: d^2
+	1 poly /: d^2
+	Some more *: d^2
+
+Conclusion: d^2
+
+3.5.6, Quad Hensel Lift:
+	1 poly *: d^2
+	1 poly /: d^2
+	Some more *: d^2
+
+Conclusion: d^2
+
+Multi Hensel Lift:
+	1 poly GCD: d^2
+	1 scalar /: d
+	log(exp) times:
+		1 hensel lift: d^2
+		1 quad hensel lift: d^2
+		Some * and stuff: d^2
+	exp times:
+		1 ring *: 1
+
+Conclusion: d^2 log exp + exp
+
+Poly Hensel Lift: (f polynomials of degree d)
+	f times:
+		1 poly *: d^2
+	
+	f times:
+		1 multi hensel lift: d^2 log exp + exp
+
+Conclusion: d^2 f log exp + f exp
+

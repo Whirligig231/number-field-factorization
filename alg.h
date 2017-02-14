@@ -152,9 +152,10 @@ poly<T> sub_resultant_gcd(poly<T> a, poly<T> b) {
 		
 		a = b;
 		b = r;
-		b /= g;
+		T ghd = g;
 		for (int i = 0; i < delta; i++)
-			b /= h;
+			ghd *= h;
+		b /= ghd;
 		c++;
 
 		if (c < 10) {
@@ -213,9 +214,10 @@ T sub_resultant(poly<T> a, poly<T> b) {
 		
 		a = b;
 		b = r;
-		b /= g;
+		T ghd = g;
 		for (int i = 0; i < delta; i++)
-			b /= h;
+			ghd *= h;
+		b /= ghd;
 		
 		g = a[a.degree()];
 		T h2 = util<T>::get_pow(g, delta);
